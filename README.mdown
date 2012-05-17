@@ -10,6 +10,7 @@ Application A can publish an event
     ResqueBus.redis = "192.168.1.1:6379"
     ResqueBus.app_id = "app_a"
 
+    # business logic
     ResqueBus.publish("user_created", "id" => 42, "first_name" => "John", "last_name" => "Smith")
 
 Application B is subscribed to events
@@ -34,14 +35,14 @@ The subscription block is run inside a Resque worker which needs to be started. 
 
 ### Compatibility
 
-ResqueBus can live along side another instance of Resque that points at a different Redis instance.
+ResqueBus can live along side another instance of Resque that points at a different Redis server.
     
     # config
     Resque.redis = "192.168.1.0:6379"
     ResqueBus.redis = "192.168.1.1:6379"
     ResqueBus.app_id = "app_a"
 
-If no Redis instance is given specifically, ResqueBus will use the Resque one (in it's own namespace)
+If no Redis instance is given specifically, ResqueBus will use the Resque one (in it's own namespace).
 
     # config
     Resque.redis = "192.168.1.0:6379"
