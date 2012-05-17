@@ -8,6 +8,10 @@ RSpec.configure do |config|
     ResqueBus.send(:reset)
   end
   config.after(:each) do
+    begin
+      ResqueBus.redis.flushall
+    rescue
+    end
     ResqueBus.send(:reset)
   end
 end

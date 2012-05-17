@@ -2,6 +2,7 @@ require 'redis/namespace'
 require 'resque'
 
 require "resque_bus/version"
+require 'resque_bus/driver'
 
 
 module ResqueBus
@@ -45,6 +46,10 @@ module ResqueBus
     self.redis
   end
   
+  def publish(event_type, attributes = {})
+    push(incoming_queue, :event_type => event_type.to_s, :class => Driver.to_s, :args => attributes)
+  end
+  
   protected
   
   def reset
@@ -52,8 +57,40 @@ module ResqueBus
     @redis = nil # clear instance of redis
   end
   
+  def incoming_queue
+    "incoming"
+  end
+  
   def default_namespace
     :resquebus
+  end
+  
+  ## From Resque, but using our instance of Redis
+  
+  # Pushes a job onto a queue. Queue name should be a string and the
+  # item should be any JSON-able Ruby object.
+  #
+  # Resque works generally expect the `item` to be a hash with the following
+  # keys:
+  #
+  #   class - The String name of the job to run.
+  #    args - An Array of arguments to pass the job. Usually passed
+  #           via `class.to_class.perform(*args)`.
+  #
+  # Example
+  #
+  #   Resque.push('archive', :class => 'Archive', :args => [ 35, 'tar' ])
+  #
+  # Returns nothing
+  def push(queue, item)
+    watch_queue(queue)
+    redis.rpush "queue:#{queue}", Resque.encode(item)
+  end
+  
+  # Used internally to keep track of which queues we've created.
+  # Don't call this directly.
+  def watch_queue(queue)
+    redis.sadd(:queues, queue.to_s)
   end
   
 end
