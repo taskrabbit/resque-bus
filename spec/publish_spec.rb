@@ -12,9 +12,8 @@ describe "Publising an event" do
     
     val = ResqueBus.redis.lpop("queue:incoming")
     hash = JSON.parse(val)
-    hash["event_type"].should == event_name
     hash["class"].should == "ResqueBus::Driver"
-    hash["args"].should == {"one" => 1, "two" => "here"}
+    hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1} ]
     
   end
 end

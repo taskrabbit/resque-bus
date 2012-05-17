@@ -3,7 +3,8 @@ require 'resque'
 
 require "resque_bus/version"
 require 'resque_bus/driver'
-
+require 'resque_bus/rider'
+require 'resque_bus/routes'
 
 module ResqueBus
   extend self
@@ -37,7 +38,7 @@ module ResqueBus
   end
 
   # Returns the current Redis connection. If none has been created, will
-  # create a new one.
+  # create a new one from the Reqsue one (with a different namespace)
   def redis
     return @redis if @redis
     copy = Resque.redis.clone
@@ -47,7 +48,15 @@ module ResqueBus
   end
   
   def publish(event_type, attributes = {})
-    push(incoming_queue, :event_type => event_type.to_s, :class => Driver.to_s, :args => attributes)
+    enqueue_to(incoming_queue, Driver, event_type, attributes)
+  end
+  
+  def subscribe(app_name, event_types)
+    Driver.subscribe(app_name, event_types)
+  end
+  
+  def enqueue_to(queue, klass, event_type, attributes={})
+    push(queue, :class => klass.to_s, :args => [event_type, attributes || {}])
   end
   
   protected
@@ -60,7 +69,7 @@ module ResqueBus
   def incoming_queue
     "incoming"
   end
-  
+
   def default_namespace
     :resquebus
   end
