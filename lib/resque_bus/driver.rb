@@ -3,6 +3,8 @@ module ResqueBus
   class Driver
     
     def self.subscribe(app_name, event_types)
+      # need to normalize app name
+      
       # if event_types is an array, make a hash wih the default queue #{app_name}_#{default_queue}
       # same if string
       # otherwise if hash, do the sae (prepend app_) to whatever is there (default if nil)

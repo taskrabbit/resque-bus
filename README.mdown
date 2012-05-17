@@ -1,0 +1,54 @@
+## Resque Bus
+
+This gem uses Redis and Resque to allow simple asynchronous communication between apps.
+
+### Example
+
+Application A can publish an event
+
+    # config
+    ResqueBus.redis = "192.168.1.1:6379"
+    ResqueBus.app_id = "app_a"
+
+    ResqueBus.publish("user_created", "id" => 42, "first_name" => "John", "last_name" => "Smith")
+
+Application B is subscribed to events
+
+    # config
+    ResqueBus.redis = "192.168.1.1:6379"
+    ResqueBus.app_id = "app_b"
+    
+    # initializer
+    resque_bus do
+      subscribe "user_created" do |attributes|
+        NameCount.find_or_create_by_name(attributes["last_name"]).increment!
+      end
+      
+      # add more events
+    end
+
+The subscription block is run inside a Resque worker which needs to be started. Some options:
+
+    $ rake resquebus:work
+    $ COUNT=5 rake resquebus:workers
+
+### Compatibility
+
+ResqueBus can live along side another instance of Resque that points at a different Redis instance.
+    
+    # config
+    Resque.redis = "192.168.1.0:6379"
+    ResqueBus.redis = "192.168.1.1:6379"
+    ResqueBus.app_id = "app_a"
+
+If no Redis instance is given specifically, ResqueBus will use the Resque one (in it's own namespace)
+
+    # config
+    Resque.redis = "192.168.1.0:6379"
+    ResqueBus.app_id = "app_a"
+    
+    
+
+
+    
+Copyright (c) 2011 Brian Leonard, released under the MIT license
