@@ -14,9 +14,12 @@ module ResqueBus
     
     def self.perform(event_type, attributes = {})
       raise "No event type passed" if event_type == nil || event_type == ""
+      
+      puts "Driver running: #{event_type} #{attributes.inspect}"
 
       queue_matches(event_type).each do |tuple|
         match, queue_name = tuple
+        puts "  ...sending to #{queue_name} queue because of subscription: #{match}"
         
         bus_attr = {"bus_event_type" => event_type, "bus_driven_at" => Time.now.to_i}
         ResqueBus.enqueue_to(queue_name, Rider, match, bus_attr.merge(attributes || {}))

@@ -67,6 +67,8 @@ module ResqueBus
   
   def publish(event_type, attributes = {})
     bus_attr = {"bus_published_at" => Time.now.to_i, "bus_app_key" => application.app_key, "created_at" => Time.now.to_i}
+    
+    puts "Event published: #{event_type} #{attributes.inspect}"
     enqueue_to(incoming_queue, Driver, event_type, bus_attr.merge(attributes || {}))
   end
   
@@ -87,6 +89,8 @@ module ResqueBus
   def reset
     # used by tests
     @redis = nil # clear instance of redis
+    @application = nil
+    @dispatcher = nil
   end
   
   def incoming_queue

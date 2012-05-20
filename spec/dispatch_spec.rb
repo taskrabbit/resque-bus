@@ -33,7 +33,8 @@ module ResqueBus
       dispatch.subscribe("my_event") do |attrs|
         Runner1.run(attrs)
       end
-      dispatch.subscriptions["my_event"].is_a?(Proc).should == true
+      queue, proc = dispatch.subscriptions["my_event"]
+      proc.is_a?(Proc).should == true
 
       Runner.value.should == 0
       dispatch.execute("my_event", {:ok => true})
@@ -49,19 +50,29 @@ module ResqueBus
     end
     
     describe "Top Level" do
-      it "should register" do
+      before(:each) do
         ResqueBus.dispatcher.should be_nil
-        
-        ResqueBus.dispatch do
-          subscribe "event1" do |attributes|
-            Runner2.run(attributes)
-          end
-          
-          subscribe "event2" do
-            Runner2.run({})
-          end
-        end
-        
+
+         ResqueBus.dispatch do
+           subscribe "event1" do |attributes|
+             Runner2.run(attributes)
+           end
+
+           subscribe "event2" do
+             Runner2.run({})
+           end
+
+           high "event3" do
+             Runner2.run({})
+           end
+           
+           low /^patt.+ern/ do
+             Runner.run({})
+           end
+         end
+       end
+       
+      it "should register and run" do       
         ResqueBus.dispatcher.should_not be_nil
         
         Runner2.value.should == 0
@@ -72,6 +83,12 @@ module ResqueBus
         ResqueBus.dispatcher.execute("event1", {})
         Runner2.value.should == 3
       end
+      
+      it "should be able to fetch queues" do
+        ResqueBus.dispatcher.event_queues.should == { "event1" => "default", "event2" => "default", 
+                                                      "event3" => "high", "(?-mix:^patt.+ern)" => "low"}
+      end
+    
     end
   end
 
