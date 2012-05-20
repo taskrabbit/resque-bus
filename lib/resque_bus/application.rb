@@ -1,6 +1,12 @@
 module ResqueBus
   class Application
     attr_reader :name, :key
+    
+    def self.all
+      # note the names arent the same as we started with
+      ResqueBus.redis.smembers("apps").collect{ |key| new(key) }
+    end
+    
     def initialize(name)
       @name = name
       @key = self.class.normalize_key(name)
@@ -54,8 +60,16 @@ module ResqueBus
       out.uniq
     end
     
+    def event_queues
+      ResqueBus.redis.hgetall(app_key)
+    end
+    
     def events
-      ResqueBus.redis.hgetall(app_key) || {}
+      ResqueBus.redis.hkeys(app_key).uniq
+    end
+    
+    def event_matches(event)
+      event_queues.reject{ |k,_| !event_matches?(k, event) }
     end
     
     protected
@@ -66,6 +80,12 @@ module ResqueBus
     
     def self.normalize_key(key)
       key.to_s.gsub(/\W/, "_").downcase
+    end
+    
+    def event_matches?(mine, given)
+      return true if mine == given
+      # TODO: wildcard * 
+      false
     end
     
   end
