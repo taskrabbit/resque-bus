@@ -4,12 +4,12 @@ module ResqueBus
     
     def self.all
       # note the names arent the same as we started with
-      ResqueBus.redis.smembers("apps").collect{ |val| new(val) }
+      ResqueBus.redis.smembers(app_list_key).collect{ |val| new(val) }
     end
     
     def initialize(app_key)
       @app_key = self.class.normalize(app_key)
-      @redis_key = "app:#{@app_key}"
+      @redis_key = "#{self.class.app_single_key}:#{@app_key}"
       # raise error if only other chars
       raise "Invalid application name" if @app_key.gsub("_", "").size == 0
     end
@@ -44,13 +44,13 @@ module ResqueBus
       
       # make it the real one
       ResqueBus.redis.rename(temp_key, redis_key)
-      ResqueBus.redis.sadd(:apps, app_key)
+      ResqueBus.redis.sadd(self.class.app_list_key, app_key)
       true
     end
     
     def unsubscribe
       # TODO: clean up known queues
-      ResqueBus.redis.srem(:apps, app_key)
+      ResqueBus.redis.srem(self.class.app_list_key, app_key)
       ResqueBus.redis.del(redis_key)
     end
     
@@ -77,6 +77,14 @@ module ResqueBus
 
     def self.normalize(val)
       val.to_s.gsub(/\W/, "_").downcase
+    end
+    
+    def self.app_list_key
+      "resquebus_apps"
+    end
+    
+    def self.app_single_key
+      "resquebus_app"
     end
     
     def event_matches?(mine, given)

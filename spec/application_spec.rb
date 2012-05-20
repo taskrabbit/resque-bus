@@ -46,47 +46,47 @@ module ResqueBus
   
     describe "#subscribe" do
       it "should add array to redis" do
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
         Application.new("myapp").subscribe(["event_one", "event_two"])
       
-        ResqueBus.redis.hgetall("app:myapp").should == {"event_one"=>"myapp_default", "event_two"=>"myapp_default"}
-        ResqueBus.redis.hkeys("app:myapp").should =~ ["event_one", "event_two"]
-        ResqueBus.redis.hvals("app:myapp").should =~ ["myapp_default", "myapp_default"]
-        ResqueBus.redis.smembers("apps").should =~ ["myapp"]
+        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {"event_one"=>"myapp_default", "event_two"=>"myapp_default"}
+        ResqueBus.redis.hkeys("resquebus_app:myapp").should =~ ["event_one", "event_two"]
+        ResqueBus.redis.hvals("resquebus_app:myapp").should =~ ["myapp_default", "myapp_default"]
+        ResqueBus.redis.smembers("resquebus_apps").should =~ ["myapp"]
       end
       it "should add string to redis" do
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
         Application.new("myapp").subscribe("event_one")
       
-        ResqueBus.redis.hgetall("app:myapp").should == {"event_one"=>"myapp_default"}
-        ResqueBus.redis.hkeys("app:myapp").should =~ ["event_one"]
-        ResqueBus.redis.hvals("app:myapp").should =~ ["myapp_default"]
-        ResqueBus.redis.smembers("apps").should =~ ["myapp"]
+        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {"event_one"=>"myapp_default"}
+        ResqueBus.redis.hkeys("resquebus_app:myapp").should =~ ["event_one"]
+        ResqueBus.redis.hvals("resquebus_app:myapp").should =~ ["myapp_default"]
+        ResqueBus.redis.smembers("resquebus_apps").should =~ ["myapp"]
       end
       it "should add hash to redis" do
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
         Application.new("myapp").subscribe({:event_one => :other, :event_two => :default, :event_three => ""})
-        ResqueBus.redis.hgetall("app:myapp").should == {"event_one"=>"myapp_other", "event_two"=>"myapp_default", "event_three" => "myapp_default"}
-        ResqueBus.redis.hkeys("app:myapp").should =~ ["event_one", "event_two", "event_three"]
-        ResqueBus.redis.hvals("app:myapp").should =~ ["myapp_other", "myapp_default", "myapp_default"]
-        ResqueBus.redis.smembers("apps").should =~ ["myapp"]
+        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {"event_one"=>"myapp_other", "event_two"=>"myapp_default", "event_three" => "myapp_default"}
+        ResqueBus.redis.hkeys("resquebus_app:myapp").should =~ ["event_one", "event_two", "event_three"]
+        ResqueBus.redis.hvals("resquebus_app:myapp").should =~ ["myapp_other", "myapp_default", "myapp_default"]
+        ResqueBus.redis.smembers("resquebus_apps").should =~ ["myapp"]
       end
     
       it "should do nothing if nil or empty" do
       
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
       
         Application.new("myapp").subscribe(nil)
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
       
         Application.new("myapp").subscribe("")
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
       
         Application.new("myapp").subscribe([])
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
       
         Application.new("myapp").subscribe({})
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
       end
       it "should call unsubscribe" do
         app = Application.new("myapp")
@@ -97,14 +97,14 @@ module ResqueBus
   
     describe "#unsubscribe" do
       it "should remove items" do
-        ResqueBus.redis.sadd("apps", "myapp")
-        ResqueBus.redis.sadd("apps", "other")
-        ResqueBus.redis.hset("app:myapp", "event_one", "myapp_default")
+        ResqueBus.redis.sadd("resquebus_apps", "myapp")
+        ResqueBus.redis.sadd("resquebus_apps", "other")
+        ResqueBus.redis.hset("resquebus_app:myapp", "event_one", "myapp_default")
       
         Application.new("myapp").unsubscribe
       
-        ResqueBus.redis.smembers("apps").should == ["other"]
-        ResqueBus.redis.get("app:myapp").should be_nil
+        ResqueBus.redis.smembers("resquebus_apps").should == ["other"]
+        ResqueBus.redis.get("resquebus_app:myapp").should be_nil
       end
     end
   
