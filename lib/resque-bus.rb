@@ -5,7 +5,7 @@ require "resque_bus/version"
 require 'resque_bus/application'
 require 'resque_bus/driver'
 require 'resque_bus/rider'
-require 'resque_bus/routes'
+require 'resque_bus/dispatch'
 
 module ResqueBus
   extend self
@@ -15,6 +15,16 @@ module ResqueBus
   end
   def application
     @application ||= Application.new("unknown")
+  end
+  
+  def dispatch(&block)
+    @dispatcher = Dispatch.new
+    @dispatcher.instance_eval(&block)
+    @dispatcher
+  end
+  
+  def dispatcher
+    @dispatcher
   end
 
   # Accepts:
@@ -56,9 +66,8 @@ module ResqueBus
   end
   
   def publish(event_type, attributes = {})
-    attributes ||= {}
-    bus_attr = {:bus_published_at => Time.now.to_i, :bus_app_key => application.app_key}
-    enqueue_to(incoming_queue, Driver, event_type, attributes.merge(bus_attr))
+    bus_attr = {"bus_published_at" => Time.now.to_i, "bus_app_key" => application.app_key, "created_at" => Time.now.to_i}
+    enqueue_to(incoming_queue, Driver, event_type, bus_attr.merge(attributes || {}))
   end
   
   def subscribe(app_name, event_types)

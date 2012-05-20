@@ -14,8 +14,7 @@ module ResqueBus
       attributes["bus_executed_at"] = Time.now.to_i
       
       # (now running with the real app that subscribed)
-      # find the subscription from Routes for the event 
-      # and execute the block with the remaining attributes
+      ResqueBus.dispatcher.execute(match, attributes)
     end
   end
 end

@@ -20,7 +20,7 @@ Application B is subscribed to events
     ResqueBus.app_key = "app_b"
     
     # initializer
-    resque_bus do
+    ResqueBus.dispatch do
       subscribe "user_created" do |attributes|
         NameCount.find_or_create_by_name(attributes["last_name"]).increment!
       end

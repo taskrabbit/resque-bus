@@ -9,7 +9,7 @@ describe "Publising an event" do
     Timecop.return
   end
   
-  let(:bus_attrs) { {"bus_published_at" => Time.now.to_i, "bus_app_key" => "test"} }
+  let(:bus_attrs) { {"bus_published_at" => Time.now.to_i, "bus_app_key" => "test", "created_at" => Time.now.to_i} }
   
   it "should add it to Redis" do
     hash = {:one => 1, "two" => "here"}
