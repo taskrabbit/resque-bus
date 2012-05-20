@@ -30,6 +30,16 @@ Application B is subscribed to events
       critical "user_paid" do |attributes|
         CreditCard.charge!(attributes)
       end
+      
+      # you can leave the attributes off if you like
+      subscribe "user_homepage_visit" do
+        Analytics.increment!
+      end
+      
+      # and regexes work as well
+      subscribe /^user_/ do |attributes|
+        Metrics.record_user_action(attributes["bus_event_type"], attributes["id"])
+      end
     end
 
 The subscription block is run inside a Resque worker which needs to be started for each app.
