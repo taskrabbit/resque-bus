@@ -80,5 +80,12 @@ That will use the default (resque) namespace which can be helpful for using the 
     ResqueBus.app_key = "app_a"   
 
 
+### TODO
+
+* There are a few spots in the code with TODO notes
+* Make this not freak out in development without Redis or when Redis is down
+* We might not actually need to publish in tests
+* Add some rspec helpers for the apps to use: should_ post an event_publish or something along those lines
+* A synchronous version will be needed for several use cases. Make it so that an event can go in real-time to one subscriber and still be async to the rest.
     
 Copyright (c) 2011 Brian Leonard, released under the MIT license
