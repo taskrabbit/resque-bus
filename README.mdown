@@ -33,12 +33,18 @@ Application B is subscribed to events
       
       # you can leave the attributes off if you like
       subscribe "user_homepage_visit" do
-        Analytics.increment!
+        GoogleAnalytics.increment!("homepage")
       end
       
-      # and regexes work as well
+      # and regexes work as well. note that with the above configuration along with this regex,
+      # the below and the corresponding block above would both be executed
       subscribe /^user_/ do |attributes|
         Metrics.record_user_action(attributes["bus_event_type"], attributes["id"])
+      end
+      
+      # however, this would overwrite the relevant block above
+      subscribe "user_homepage_visit" do
+        Mixpanel.increment!("homepage")
       end
     end
 
