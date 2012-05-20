@@ -50,7 +50,7 @@ module ResqueBus
 
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app1_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event1", {"x" => "y", "event_type" => "event1"} ]
+        hash["args"].should == [ "event1", {"x" => "y", "bus_event_type" => "event1"} ]
       end
       
       it "should queue up to multiple" do
@@ -62,11 +62,11 @@ module ResqueBus
 
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app2_more"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event4", {"x" => "y", "event_type" => "event4"} ]
+        hash["args"].should == [ "event4", {"x" => "y", "bus_event_type" => "event4"} ]
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event[45]", {"x" => "y", "event_type" => "event4"} ]
+        hash["args"].should == [ "event[45]", {"x" => "y", "bus_event_type" => "event4"} ]
       end
       
       it "should queue up to the same" do
@@ -82,12 +82,12 @@ module ResqueBus
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"][1].should == {"x" => "y", "event_type" => "event5"}
+        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5"}
         first = hash["args"][0]
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"][1].should == {"x" => "y", "event_type" => "event5"}
+        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5"}
         second = hash["args"][0]
         
         if first == "event[45]"

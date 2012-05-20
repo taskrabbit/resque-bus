@@ -49,6 +49,7 @@ module ResqueBus
   end
   
   def publish(event_type, attributes = {})
+    # TODO: add in app_id that created it
     enqueue_to(incoming_queue, Driver, event_type, attributes)
   end
   
@@ -79,7 +80,7 @@ module ResqueBus
     :resquebus
   end
   
-  ## From Resque, but using our instance of Redis
+  ## From Resque, but using a (possibly) different instance of Redis
   
   # Pushes a job onto a queue. Queue name should be a string and the
   # item should be any JSON-able Ruby object.

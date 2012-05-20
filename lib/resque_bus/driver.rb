@@ -16,10 +16,9 @@ module ResqueBus
       raise "No event type passed" if event_type == nil || event_type == ""
       attributes ||= {}
       
-      
       queue_matches(event_type).each do |tuple|
         match, queue_name = tuple
-        ResqueBus.enqueue_to(queue_name, Rider, match, attributes.merge(:event_type => event_type))
+        ResqueBus.enqueue_to(queue_name, Rider, match, attributes.merge(:bus_event_type => event_type))
       end
     end
 
