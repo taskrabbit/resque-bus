@@ -2,12 +2,13 @@ require 'spec_helper'
 
 module ResqueBus
   describe Driver do
-    describe "#queue_matches" do
-      before(:each) do
-        ResqueBus.subscribe("app1", ["event1", "event2", "event3"])
-        ResqueBus.subscribe("app2", {"event2" => "other", "event4" => "more"})
-        ResqueBus.subscribe("app3", ["event[45]", "event5", "event6"])
-      end
+    before(:each) do
+      ResqueBus.subscribe("app1", ["event1", "event2", "event3"])
+      ResqueBus.subscribe("app2", {"event2" => "other", "event4" => "more"})
+      ResqueBus.subscribe("app3", ["event[45]", "event5", "event6"])
+    end
+    
+    describe ".queue_matches" do
       it "return empty array when none" do
         Driver.queue_matches("else").should == []
         Driver.queue_matches("event").should == []
@@ -24,6 +25,77 @@ module ResqueBus
       end
       it "should match multiple events in same app" do
         Driver.queue_matches("event5").should =~ [["event[45]", "app3_default"], ["event5", "app3_default"]]
+      end
+    end
+    
+    describe ".peform" do
+      let(:attributes) { {"x" => "y"} }
+      
+      before(:each) do
+        ResqueBus.redis.smembers("queues").should == []
+        ResqueBus.redis.lpop("queue:app1_default").should be_nil
+        ResqueBus.redis.lpop("queue:app2_default").should be_nil
+        ResqueBus.redis.lpop("queue:app3_default").should be_nil
+      end
+      
+      it "should do nothing when empty" do
+        Driver.perform("else", attributes)
+        ResqueBus.redis.smembers("queues").should == []
+      end
+      
+      it "should queue up the riders in redis" do
+        ResqueBus.redis.lpop("queue:app1_default").should be_nil
+        Driver.perform("event1", attributes)
+        ResqueBus.redis.smembers("queues").should =~ ["app1_default"]
+
+        hash = JSON.parse(ResqueBus.redis.lpop("queue:app1_default"))
+        hash["class"].should == "ResqueBus::Rider"
+        hash["args"].should == [ "event1", {"x" => "y", "event_type" => "event1"} ]
+      end
+      
+      it "should queue up to multiple" do
+        Driver.perform("event4", attributes)
+        ResqueBus.redis.smembers("queues").should =~ ["app3_default", "app2_more"]
+        
+        ResqueBus.redis.lpop("queue:app1_default").should be_nil
+        ResqueBus.redis.lpop("queue:app2_default").should be_nil
+
+        hash = JSON.parse(ResqueBus.redis.lpop("queue:app2_more"))
+        hash["class"].should == "ResqueBus::Rider"
+        hash["args"].should == [ "event4", {"x" => "y", "event_type" => "event4"} ]
+        
+        hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
+        hash["class"].should == "ResqueBus::Rider"
+        hash["args"].should == [ "event[45]", {"x" => "y", "event_type" => "event4"} ]
+      end
+      
+      it "should queue up to the same" do
+        Driver.perform("event5", attributes)
+        ResqueBus.redis.smembers("queues").should =~ ["app3_default"]
+        
+        ResqueBus.redis.lpop("queue:app1_default").should be_nil
+        ResqueBus.redis.lpop("queue:app2_default").should be_nil
+        ResqueBus.redis.lpop("queue:app2_more").should be_nil
+        ResqueBus.redis.lpop("queue:app2_other").should be_nil
+
+        ResqueBus.redis.llen("queue:app3_default").should == 2
+        
+        hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
+        hash["class"].should == "ResqueBus::Rider"
+        hash["args"][1].should == {"x" => "y", "event_type" => "event5"}
+        first = hash["args"][0]
+        
+        hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
+        hash["class"].should == "ResqueBus::Rider"
+        hash["args"][1].should == {"x" => "y", "event_type" => "event5"}
+        second = hash["args"][0]
+        
+        if first == "event[45]"
+          second.should == "event5"
+        else
+          first.should == "event5"
+          second.should == "event[45]"
+        end
       end
     end
   end

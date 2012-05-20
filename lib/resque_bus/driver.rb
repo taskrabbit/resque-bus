@@ -19,20 +19,9 @@ module ResqueBus
       
       queue_matches(event_type).each do |tuple|
         match, queue_name = tuple
-        enqueue_to(queue_name, Rider, event_type, attributes)
+        ResqueBus.enqueue_to(queue_name, Rider, match, attributes.merge(:event_type => event_type))
       end
     end
-    
-    protected
-    
-    def self.normalize_key(name)
-      #TODO: need to normalize app name
-      name.to_s.gsub(/\W/, "_")
-    end
-    
-    def self.default_queue
-      "default"
-    end
-    
+
   end
 end

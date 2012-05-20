@@ -60,8 +60,8 @@ module ResqueBus
     Application.new(app_name).unsubscribe
   end
   
-  def enqueue_to(queue, klass, event_type, attributes={})
-    push(queue, :class => klass.to_s, :args => [event_type, attributes || {}])
+  def enqueue_to(queue, klass, event_type_or_match, attributes={})
+    push(queue, :class => klass.to_s, :args => [event_type_or_match, attributes || {}])
   end
   
   protected

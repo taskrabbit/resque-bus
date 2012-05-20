@@ -2,8 +2,8 @@ module ResqueBus
   # queue'd in each
   class Rider
     
-    def self.perform(event_type, attributes = {})
-      raise "No event type passed" if event_type == nil || event_type == ""
+    def self.perform(match, attributes = {})
+      raise "No event type match passed" if match == nil || match == ""
       attributes ||= {}
       
       # (now running with the real app that subscribed)
