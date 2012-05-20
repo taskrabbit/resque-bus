@@ -15,7 +15,7 @@ module ResqueBus
     end
     
     def subscribe(event_types)
-      if event_types == nil || event_types == "" || event_types == [] || event_types == {}
+      if event_types == nil || event_types.to_s == "" || event_types == [] || event_types == {}
         unsubscribe
         return true
       end
@@ -29,7 +29,7 @@ module ResqueBus
           queue = self.class.normalize_key(queue)
           queue = "default" if queue.size == 0
           queue = "#{key}_#{queue}"
-          ResqueBus.redis.hset(temp_key, event, queue)
+          ResqueBus.redis.hset(temp_key, event.to_s, queue)
           queues << queue
         end
       else
@@ -83,9 +83,21 @@ module ResqueBus
     end
     
     def event_matches?(mine, given)
+      mine = mine.to_s
+      given = given.to_s
       return true if mine == given
-      # TODO: wildcard * 
-      false
+      begin
+        # if it's already a regex, don't mess with it
+        # otherwise, it should ahve start and end line situation
+        if mine[0..6] == "(?-mix:"
+          regex = Regexp.new(mine)
+        else
+          regex = Regexp.new("^#{mine}$")
+        end
+        return !!regex.match(given)
+      rescue
+        return false
+      end
     end
     
   end

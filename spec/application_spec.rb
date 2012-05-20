@@ -148,17 +148,48 @@ module ResqueBus
       end
     end
     
-    describe "event_matches" do
+    describe "#event_matches" do
       it "should return if it is there" do
         Application.new("myapp").event_matches("three").should == {}
         
-        Application.new("myapp").subscribe(["one", "two"])
+        Application.new("myapp").subscribe(["one_x", "one_y", "one", "two"])
         Application.new("myapp").event_matches("three").should == {}
         
         Application.new("myapp").event_matches("two").should == {"two" => "myapp_default"}
+        Application.new("myapp").event_matches("one").should == {"one" => "myapp_default"}
       end
       
-      it "should handle wildcards or something"
+      it "should handle * wildcards" do
+        Application.new("myapp").subscribe(["one.+", "one", "one_.*", "two"])
+        Application.new("myapp").event_matches("three").should == {}
+        
+        Application.new("myapp").event_matches("onex").should == {"one.+" => "myapp_default"}
+        Application.new("myapp").event_matches("one").should == {"one" => "myapp_default"}
+        Application.new("myapp").event_matches("one_x").should == {"one.+" => "myapp_default", "one_.*" => "myapp_default"}
+      end
+      
+      it "should handle actual regular expressions" do
+        Application.new("myapp").subscribe([/one.+/, "one", /one_.*/, "two"])
+        Application.new("myapp").event_matches("three").should == {}
+        
+        Application.new("myapp").event_matches("onex").should == {"(?-mix:one.+)" => "myapp_default"}
+        Application.new("myapp").event_matches("donex").should == {"(?-mix:one.+)" => "myapp_default"}
+        Application.new("myapp").event_matches("one").should == {"one" => "myapp_default"}
+        Application.new("myapp").event_matches("one_x").should == {"(?-mix:one.+)" => "myapp_default", "(?-mix:one_.*)" => "myapp_default"}
+      end
+    end
+    
+    describe "#event_matches?" do
+      it "should do pattern stuff" do
+        app = Application.new("test")
+        app.send(:event_matches?, "one", "one").should == true
+        app.send(:event_matches?, "one", "onex").should == false
+        app.send(:event_matches?, "^one.*$", "onex").should == true
+        app.send(:event_matches?, "one.*", "onex").should == true
+        app.send(:event_matches?, "one.?", "onex").should == true
+        app.send(:event_matches?, "one.?", "one").should == true
+        app.send(:event_matches?, "\\", "one").should == false
+      end
     end
   end
 end

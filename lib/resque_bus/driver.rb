@@ -2,16 +2,23 @@ module ResqueBus
   # fans out an event to multiple queues
   class Driver
     
-    def self.queues(event_type)
-      []
+    def self.queue_matches(event_type)
+      out = []
+      Application.all.each do |app|
+        app.event_matches(event_type).each do |match, queue_name|
+          out << [match, queue_name]
+        end
+      end
+      out
     end
-
+    
     def self.perform(event_type, attributes = {})
       raise "No event type passed" if event_type == nil || event_type == ""
       attributes ||= {}
       
       
-      queues(event_type).each do |queue_name|
+      queue_matches(event_type).each do |tuple|
+        match, queue_name = tuple
         enqueue_to(queue_name, Rider, event_type, attributes)
       end
     end
