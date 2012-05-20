@@ -21,11 +21,15 @@ Application B is subscribed to events
     
     # initializer
     ResqueBus.dispatch do
+      # processes event on app_b_default queue
       subscribe "user_created" do |attributes|
         NameCount.find_or_create_by_name(attributes["last_name"]).increment!
       end
       
-      # add more events
+      # processes event on app_b_critical queue
+      subscribe "user_paid" do |attributes|
+        CreditCard.charge!(attributes)
+      end
     end
 
 The subscription block is run inside a Resque worker which needs to be started for each app.
