@@ -10,6 +10,13 @@ require 'resque_bus/routes'
 module ResqueBus
   extend self
 
+  def app_key=key
+    @application = Application.new(key)
+  end
+  def application
+    @application ||= Application.new("unknown")
+  end
+
   # Accepts:
   #   1. A 'hostname:port' String
   #   2. A 'hostname:port:db' String (to select the Redis db)
@@ -49,8 +56,9 @@ module ResqueBus
   end
   
   def publish(event_type, attributes = {})
-    # TODO: add in app_id that created it
-    enqueue_to(incoming_queue, Driver, event_type, attributes)
+    attributes ||= {}
+    bus_attr = {:bus_published_at => Time.now.to_i, :bus_app_key => application.app_key}
+    enqueue_to(incoming_queue, Driver, event_type, attributes.merge(bus_attr))
   end
   
   def subscribe(app_name, event_types)
@@ -61,8 +69,8 @@ module ResqueBus
     Application.new(app_name).unsubscribe
   end
   
-  def enqueue_to(queue, klass, event_type_or_match, attributes={})
-    push(queue, :class => klass.to_s, :args => [event_type_or_match, attributes || {}])
+  def enqueue_to(queue, klass, event_type_or_match, attributes)
+    push(queue, :class => klass.to_s, :args => [event_type_or_match, attributes])
   end
   
   protected

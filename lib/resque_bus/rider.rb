@@ -6,6 +6,13 @@ module ResqueBus
       raise "No event type match passed" if match == nil || match == ""
       attributes ||= {}
       
+      # attributes that should be available
+      # attributes["bus_event_type"]
+      # attributes["bus_app_key"]
+      # attributes["bus_published_at"]
+      # attributes["bus_driven_at"]
+      attributes["bus_executed_at"] = Time.now.to_i
+      
       # (now running with the real app that subscribed)
       # find the subscription from Routes for the event 
       # and execute the block with the remaining attributes

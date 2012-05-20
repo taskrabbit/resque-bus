@@ -1,17 +1,17 @@
 module ResqueBus
   class Application
-    attr_reader :name, :key
+    attr_reader :app_key, :redis_key
     
     def self.all
       # note the names arent the same as we started with
-      ResqueBus.redis.smembers("apps").collect{ |key| new(key) }
+      ResqueBus.redis.smembers("apps").collect{ |val| new(val) }
     end
     
-    def initialize(name)
-      @name = name
-      @key = self.class.normalize_key(name)
+    def initialize(app_key)
+      @app_key = self.class.normalize(app_key)
+      @redis_key = "app:#{@app_key}"
       # raise error if only other chars
-      raise "Invalid application name" if @key.gsub("_", "").size == 0
+      raise "Invalid application name" if @app_key.gsub("_", "").size == 0
     end
     
     def subscribe(event_types)
@@ -20,22 +20,22 @@ module ResqueBus
         return true
       end
       
-      temp_key = "temp_#{app_key}:#{rand(999999999)}"
+      temp_key = "temp_#{redis_key}:#{rand(999999999)}"
       
       queues = []
       # if event_types is an array, make a hash wih the default queue #{app_name}_#{default_queue}
       if event_types.is_a? Hash
         event_types.each do |event, queue|
-          queue = self.class.normalize_key(queue)
+          queue = self.class.normalize(queue)
           queue = "default" if queue.size == 0
-          queue = "#{key}_#{queue}"
+          queue = "#{app_key}_#{queue}"
           ResqueBus.redis.hset(temp_key, event.to_s, queue)
           queues << queue
         end
       else
         event_types = [event_types] unless event_types.is_a? Array
         event_types.each do |type|
-          queue = "#{key}_default"
+          queue = "#{app_key}_default"
           ResqueBus.redis.hset(temp_key, type.to_s, queue)
           queues << queue
         end
@@ -43,29 +43,30 @@ module ResqueBus
 
       
       # make it the real one
-      ResqueBus.redis.rename(temp_key, app_key)
-      ResqueBus.redis.sadd(:apps, key)
+      ResqueBus.redis.rename(temp_key, redis_key)
+      ResqueBus.redis.sadd(:apps, app_key)
       true
     end
     
     def unsubscribe
-      ResqueBus.redis.srem(:apps, key)
-      ResqueBus.redis.del(app_key)
+      # TODO: clean up known queues
+      ResqueBus.redis.srem(:apps, app_key)
+      ResqueBus.redis.del(redis_key)
     end
     
     def queues
-      out = ResqueBus.redis.hvals(app_key)
+      out = ResqueBus.redis.hvals(redis_key)
       out ||= []
-      out << "#{key}_default"
+      out << "#{app_key}_default"
       out.uniq
     end
     
     def event_queues
-      ResqueBus.redis.hgetall(app_key)
+      ResqueBus.redis.hgetall(redis_key)
     end
     
     def events
-      ResqueBus.redis.hkeys(app_key).uniq
+      ResqueBus.redis.hkeys(redis_key).uniq
     end
     
     def event_matches(event)
@@ -73,13 +74,9 @@ module ResqueBus
     end
     
     protected
-    
-    def app_key
-      "app:#{key}"
-    end
-    
-    def self.normalize_key(key)
-      key.to_s.gsub(/\W/, "_").downcase
+
+    def self.normalize(val)
+      val.to_s.gsub(/\W/, "_").downcase
     end
     
     def event_matches?(mine, given)

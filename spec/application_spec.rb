@@ -11,23 +11,21 @@ module ResqueBus
         Application.new("Two").subscribe("fdklhf")
         Application.new("Three").subscribe("fkld")
         
-        Application.all.collect(&:key).should =~ ["one", "two", "three"]
+        Application.all.collect(&:app_key).should =~ ["one", "two", "three"]
         
         Application.new("two").unsubscribe
-        Application.all.collect(&:key).should =~ ["one", "three"]
+        Application.all.collect(&:app_key).should =~ ["one", "three"]
       end
     end
     
     describe ".new" do
-      it "should have a name and key" do
-        Application.new("something").name.should == "something"
-        Application.new("something").key.should == "something"
+      it "should have a key" do
+        Application.new("something").app_key.should == "something"
       
-        Application.new("some thing").name.should == "some thing"
-        Application.new("some thing").key.should == "some_thing"
-        Application.new("some-thing").key.should == "some_thing"
-        Application.new("some_thing").key.should == "some_thing"
-        Application.new("Some Thing").key.should == "some_thing"
+        Application.new("some thing").app_key.should == "some_thing"
+        Application.new("some-thing").app_key.should == "some_thing"
+        Application.new("some_thing").app_key.should == "some_thing"
+        Application.new("Some Thing").app_key.should == "some_thing"
       end
     
       it "should raise an error if not valid" do

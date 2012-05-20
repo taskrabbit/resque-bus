@@ -6,7 +6,13 @@ module ResqueBus
       ResqueBus.subscribe("app1", ["event1", "event2", "event3"])
       ResqueBus.subscribe("app2", {"event2" => "other", "event4" => "more"})
       ResqueBus.subscribe("app3", ["event[45]", "event5", "event6"])
+      Timecop.freeze
     end
+    after(:each) do
+      Timecop.return
+    end
+    
+    let(:bus_attrs) { {"bus_driven_at" => Time.now.to_i} }
     
     describe ".queue_matches" do
       it "return empty array when none" do
@@ -50,7 +56,7 @@ module ResqueBus
 
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app1_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event1", {"x" => "y", "bus_event_type" => "event1"} ]
+        hash["args"].should == [ "event1", {"x" => "y", "bus_event_type" => "event1"}.merge(bus_attrs) ]
       end
       
       it "should queue up to multiple" do
@@ -62,11 +68,11 @@ module ResqueBus
 
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app2_more"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event4", {"x" => "y", "bus_event_type" => "event4"} ]
+        hash["args"].should == [ "event4", {"x" => "y", "bus_event_type" => "event4"}.merge(bus_attrs) ]
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event[45]", {"x" => "y", "bus_event_type" => "event4"} ]
+        hash["args"].should == [ "event[45]", {"x" => "y", "bus_event_type" => "event4"}.merge(bus_attrs) ]
       end
       
       it "should queue up to the same" do
@@ -82,12 +88,12 @@ module ResqueBus
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5"}
+        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5"}.merge(bus_attrs)
         first = hash["args"][0]
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5"}
+        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5"}.merge(bus_attrs)
         second = hash["args"][0]
         
         if first == "event[45]"
