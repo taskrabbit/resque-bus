@@ -37,7 +37,7 @@ Application B is subscribed to events
       end
       
       # and regexes work as well. note that with the above configuration along with this regex,
-      # the below and the corresponding block above would both be executed
+      # the following as well as the corresponding block above would both be executed
       subscribe /^user_/ do |attributes|
         Metrics.record_user_action(attributes["bus_event_type"], attributes["id"])
       end
