@@ -18,3 +18,5 @@ RSpec.configure do |config|
     ResqueBus.send(:reset)
   end
 end
+
+ResqueBus.redis.namespace = "resquebus_test"

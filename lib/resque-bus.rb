@@ -68,6 +68,7 @@ module ResqueBus
   def publish(event_type, attributes = {})
     bus_attr = {"bus_published_at" => Time.now.to_i, "bus_app_key" => application.app_key, "created_at" => Time.now.to_i}
     
+    # TDOO: add logging. It will be important to be able to follow these through, say in splunk.
     puts "Event published: #{event_type} #{attributes.inspect}"
     enqueue_to(incoming_queue, Driver, event_type, bus_attr.merge(attributes || {}))
   end
@@ -94,11 +95,13 @@ module ResqueBus
   end
   
   def incoming_queue
-    "incoming"
+    "resquebus_incoming"
   end
 
   def default_namespace
-    :resquebus
+    # TODO: should we do a different one?
+    # It might play better on the same server, but overall life is more complicated
+    :resque
   end
   
   ## From Resque, but using a (possibly) different instance of Redis

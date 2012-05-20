@@ -79,7 +79,7 @@ namespace :resquebus do
   
   desc "Start the ResqueBus driver"
   task :driver => [ :preload, :setup ] do
-    resquebus_work_queues(["incoming"])
+    resquebus_work_queues(["resquebus_incoming"])
   end
 
   desc "Start a ResqueBus worker"

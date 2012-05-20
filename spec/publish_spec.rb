@@ -15,12 +15,12 @@ describe "Publising an event" do
     hash = {:one => 1, "two" => "here"}
     event_name = "event_name"
     
-    val = ResqueBus.redis.lpop("queue:incoming")
+    val = ResqueBus.redis.lpop("queue:resquebus_incoming")
     val.should == nil
     
     ResqueBus.publish(event_name, hash)
     
-    val = ResqueBus.redis.lpop("queue:incoming")
+    val = ResqueBus.redis.lpop("queue:resquebus_incoming")
     hash = JSON.parse(val)
     hash["class"].should == "ResqueBus::Driver"
     hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1}.merge(bus_attrs) ]
