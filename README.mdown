@@ -50,13 +50,18 @@ ResqueBus can live along side another instance of Resque that points at a differ
     ResqueBus.redis = "192.168.1.1:6379"
     ResqueBus.app_key = "app_a"
 
-If no Redis instance is given specifically, ResqueBus will use the Resque one (in it's own namespace).
+If no Redis instance is given specifically, ResqueBus will use the Resque one.
 
     # config
     Resque.redis = "192.168.1.0:6379"
     ResqueBus.app_key = "app_a"
-    
-    
+
+That will use the default (resque) namespace which can be helpful for using the tooling. Conflict with queue names are unlikely. You can change the namepsace if you like though.
+
+    # config
+    Resque.redis = "192.168.1.0:6379"
+    ResqusBus.redis.namespace = :get_on_the_bus
+    ResqueBus.app_key = "app_a"   
 
 
     
