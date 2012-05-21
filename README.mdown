@@ -87,5 +87,6 @@ That will use the default (resque) namespace which can be helpful for using the 
 * We might not actually need to publish in tests
 * Add some rspec helpers for the apps to use: should_ post an event_publish or something along those lines
 * A synchronous version will be needed for several use cases. Make it so that an event can go in real-time to one subscriber and still be async to the rest.
+* Should this use resque-retry or should they jsut go into the failure queue?
     
 Copyright (c) 2011 Brian Leonard, released under the MIT license
