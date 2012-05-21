@@ -56,7 +56,7 @@ module ResqueBus
 
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app1_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event1", {"x" => "y", "bus_event_type" => "event1"}.merge(bus_attrs) ]
+        hash["args"].should == [ "event1", {"x" => "y", "bus_event_type" => "event1", "bus_rider_queue" => "app1_default"}.merge(bus_attrs) ]
       end
       
       it "should queue up to multiple" do
@@ -68,11 +68,11 @@ module ResqueBus
 
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app2_more"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event4", {"x" => "y", "bus_event_type" => "event4"}.merge(bus_attrs) ]
+        hash["args"].should == [ "event4", {"x" => "y", "bus_event_type" => "event4", "bus_rider_queue" => "app2_more"}.merge(bus_attrs) ]
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"].should == [ "event[45]", {"x" => "y", "bus_event_type" => "event4"}.merge(bus_attrs) ]
+        hash["args"].should == [ "event[45]", {"x" => "y", "bus_event_type" => "event4", "bus_rider_queue" => "app3_default"}.merge(bus_attrs) ]
       end
       
       it "should queue up to the same" do
@@ -88,12 +88,12 @@ module ResqueBus
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5"}.merge(bus_attrs)
+        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5", "bus_rider_queue" => "app3_default"}.merge(bus_attrs)
         first = hash["args"][0]
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app3_default"))
         hash["class"].should == "ResqueBus::Rider"
-        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5"}.merge(bus_attrs)
+        hash["args"][1].should == {"x" => "y", "bus_event_type" => "event5", "bus_rider_queue" => "app3_default"}.merge(bus_attrs)
         second = hash["args"][0]
         
         if first == "event[45]"
