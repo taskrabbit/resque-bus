@@ -65,12 +65,18 @@ module ResqueBus
     self.redis
   end
   
-  def publish(event_type, attributes = {})
+  def publish_metadata(event_type, attributes={})
     bus_attr = {"bus_published_at" => Time.now.to_i, "bus_app_key" => application.app_key, "created_at" => Time.now.to_i}
-    
+    an_id = attributes["id"] || "#{Time.now.to_i}_#{rand(999999999)}"
+    bus_attr["bus_id"] = "#{application.app_key}::#{an_id}"
+    bus_attr.merge(attributes || {})
+  end
+  
+  def publish(event_type, attributes = {})
     # TDOO: add logging. It will be important to be able to follow these through, say in splunk.
-    puts "Event published: #{event_type} #{attributes.inspect}"
-    enqueue_to(incoming_queue, Driver, event_type, bus_attr.merge(attributes || {}))
+    to_publish = publish_metadata(event_type, attributes)
+    puts "Event published: #{event_type} #{to_publish.inspect}"
+    enqueue_to(incoming_queue, Driver, event_type, to_publish)
   end
   
   def subscribe(app_name, event_types)
