@@ -75,7 +75,7 @@ module ResqueBus
   def publish(event_type, attributes = {})
     # TDOO: add logging. It will be important to be able to follow these through, say in splunk.
     to_publish = publish_metadata(event_type, attributes)
-    puts "Event published: #{event_type} #{to_publish.inspect}"
+    ResqueBus.log_application("Event published: #{event_type} #{to_publish.inspect}")
     enqueue_to(incoming_queue, Driver, event_type, to_publish)
   end
   
@@ -89,6 +89,28 @@ module ResqueBus
   
   def enqueue_to(queue, klass, event_type_or_match, attributes)
     push(queue, :class => klass.to_s, :args => [event_type_or_match, attributes])
+  end
+  
+  def logger
+    @logger
+  end
+  
+  def logger=val
+    @logger = val
+  end
+  
+  def log_application(message)
+    if logger
+      time = Time.now.strftime('%H:%M:%S %Y-%m-%d')
+      logger.info("** [#{time}] #$$: ResqueBus #{message}")
+    end
+  end
+  
+  def log_worker(message)
+    if ENV['LOGGING'] || ENV['VERBOSE'] || ENV['VVERBOSE']
+      time = Time.now.strftime('%H:%M:%S %Y-%m-%d')
+      puts "** [#{time}] #$$: #{message}"
+    end
   end
   
   protected

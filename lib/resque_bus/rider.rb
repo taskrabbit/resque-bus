@@ -6,7 +6,7 @@ module ResqueBus
       raise "No event type match passed" if match == nil || match == ""
       attributes ||= {}
       
-      puts "Rider received: #{match} #{attributes.inspect}"
+      ResqueBus.log_worker("Rider received: #{match} #{attributes.inspect}")
       
       # attributes that should be available
       # attributes["bus_event_type"]
