@@ -1,0 +1,79 @@
+<%
+  app_hash = {}
+  event_hash = {}
+  
+  # collect each differently
+  ResqueBus::Application.all.each do |app|
+    app_key = app.app_key
+    
+    app_hash[app_key] ||= []
+    app.event_display.each do |tuple|
+      event, queue = tuple
+      app_hash[app_key] << [event, queue]
+      
+      event_hash[event] ||= []
+      event_hash[event] << [app_key, queue]
+    end
+  end
+  
+  # sort each list item by secondary label
+  event_hash.each do |_, array|
+    array.sort!{ |a,b| a.first <=> b.first }
+  end
+  event_hash.each do |_, array|
+    array.sort!{ |a,b| a.first <=> b.first }
+  end
+  
+  # helper to display either
+  def display_row(name, val, first=false)
+    if !val
+      out = "<td>&nbsp;</td><td>&nbsp;</td>"
+    else
+      detail, queue = val
+      out = "<td>#{h(detail)}</td><td><a href='#{u("queues/#{queue}")}'>#{h(queue)}</a></td>"
+    end
+    
+    if first
+      "<tr><td>#{h(name)}</td>#{out}</tr>\n"
+    else
+      "<tr><td>&nbsp;</td>#{out}</tr>\n"
+    end
+  end
+  
+  def output_hash(hash)
+    out = ""
+    hash.keys.sort.each do |item|
+      display = hash[item]
+      first = display.shift
+      out << display_row(item, first, true)
+      display.each do |val|
+        out << display_row(item, val)
+      end
+    end
+    out
+  end
+%>
+
+<h1 class='wi'>Applications</h1>
+<p class='intro'>The apps below have registered the given event types and queues.</p>
+<table class='queues'>
+  <tr>
+    <th>App Key</th>
+    <th>Event Type</th>
+    <th>Queue</th>
+  </tr>
+  <%= output_hash(app_hash) %>
+</table>
+
+<p>&nbsp;</p>
+  
+<h1 class='wi'>Events</h1>
+<p class='intro'>The event types below have been registered by the given applications and queues.</p>
+<table class='queues'>
+  <tr>
+    <th>Event Type</th>
+    <th>App Key</th>
+    <th>Queue</th>
+  </tr>
+  <%= output_hash(event_hash) %>
+</table>

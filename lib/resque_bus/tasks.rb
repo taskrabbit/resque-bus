@@ -3,29 +3,7 @@
 
 namespace :resquebus do
   task :setup
-  
-  desc "Sets up an example config"
-  task :example => [ :preload, :setup ] do
-    require 'resque-bus'
-    ResqueBus.dispatch do
-      subscribe "event_one" do
-        puts "event1 happened"
-      end
-      
-      subscribe "event_two" do
-        puts "event2 happened"
-      end
-      
-      high "event_three" do
-        puts "event3 happened (high)"
-      end
-      
-      low "event_.*" do |attributes|
-        puts "LOG ALL: #{attributes.inspect}"
-      end
-    end
-  end
-  
+
   desc "Subscribes this application to ResqueBus events"
   task :subscribe => [ :preload, :setup ] do
     require 'resque-bus'
@@ -118,5 +96,51 @@ namespace :resquebus do
     
     # change the namespace to be the ones used by ResqueBus
     Resque.redis = ResqueBus.redis
+  end
+  
+  
+  # examples to test out the system
+  namespace :example do
+    desc "Publishes events to example applications"
+    task :publish => [ "resquebus:preload", "resquebus:setup" ] do
+      which = ["one", "two", "three", "other"][rand(4)]
+      ResqueBus.publish("event_#{which}", { "rand" => rand(99999)})
+      ResqueBus.publish("event_all", { "rand" => rand(99999)})
+      ResqueBus.publish("none_subscribed", { "rand" => rand(99999)})
+      puts "published event_#{which}, event_all, none_subscribed"
+    end
+    
+    desc "Sets up an example config"
+    task :register => [ "resquebus:preload", "resquebus:setup" ] do
+      require 'resque-bus'
+      ResqueBus.app_key = "example"
+      
+      ResqueBus.dispatch do
+        subscribe "event_one" do
+          puts "event1 happened"
+        end
+
+        subscribe "event_two" do
+          puts "event2 happened"
+        end
+
+        high "event_three" do
+          puts "event3 happened (high)"
+        end
+
+        low "event_.*" do |attributes|
+          puts "LOG ALL: #{attributes.inspect}"
+        end
+      end
+    end
+    
+    desc "Subscribes this application to ResqueBus example events"
+    task :subscribe => [ :register, "resquebus:subscribe" ]
+    
+    desc "Start a ResqueBus example worker"
+    task :work => [ :register, "resquebus:work" ]
+    
+    desc "Start a ResqueBus example worker"
+    task :driver => [ :register, "resquebus:driver" ]
   end
 end

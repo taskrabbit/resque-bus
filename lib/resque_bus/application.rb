@@ -73,6 +73,20 @@ module ResqueBus
       event_queues.reject{ |k,_| !event_matches?(k, event) }
     end
     
+    def event_display
+      out = []
+      event_queues.each do |mine, queue|
+        if mine[0..6] == "(?-mix:"
+          # TODO: figure out reverse label
+          val = mine
+        else
+          val = mine
+        end
+        out << [val, queue.to_s]
+      end
+      out
+    end
+    
     protected
 
     def self.normalize(val)
