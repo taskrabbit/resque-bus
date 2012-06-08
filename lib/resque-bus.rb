@@ -4,6 +4,7 @@ require 'resque'
 require "resque_bus/version"
 require 'resque_bus/application'
 require 'resque_bus/driver'
+require 'resque_bus/local'
 require 'resque_bus/rider'
 require 'resque_bus/dispatch'
 require 'resque_bus/patches'
@@ -26,6 +27,14 @@ module ResqueBus
   
   def dispatcher
     @dispatcher
+  end
+
+  def local_mode=value
+    @local_mode = value
+  end
+
+  def local_mode
+    @local_mode
   end
 
   # Accepts:
@@ -77,7 +86,11 @@ module ResqueBus
     # TDOO: add logging. It will be important to be able to follow these through, say in splunk.
     to_publish = publish_metadata(event_type, attributes)
     ResqueBus.log_application("Event published: #{event_type} #{to_publish.inspect}")
-    enqueue_to(incoming_queue, Driver, event_type, to_publish)
+    if local_mode
+      ResqueBus::Local.perform(event_type, attributes )
+    else
+      enqueue_to(incoming_queue, Driver, event_type, to_publish)
+    end
   end
   
   def subscribe(app_name, event_types)

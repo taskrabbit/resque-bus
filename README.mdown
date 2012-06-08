@@ -80,6 +80,25 @@ That will use the default (resque) namespace which can be helpful for using the 
     ResqueBus.app_key = "app_a"   
 
 
+### Local Mode
+
+For development, a local mode is also provided and is specified in the
+configuration.
+
+    # config
+    ResqueBus.local_mode = :standalone
+    or 
+    ResqueBus.local_mode = :inline
+
+Standalone mode does not require a separate resquebus:driver task to be running to process the
+incoming queue. Simply publishing to the bus will distribute the incoming events 
+to the appropriate application specific queue.  A separate resquebus:work task does 
+still need to be run to process these events
+
+Inline mode skips queue processing entirely and directly dispatches the
+event to the appropriate code block. 
+
+
 ### TODO
 
 * There are a few spots in the code with TODO notes
