@@ -1,20 +1,6 @@
 # require 'resquebus/tasks'
 # will give you the resquebus tasks
 
-#Run me like this: rake RD[myTask]
-desc "Daemonize a rake task"
-task :RD, :taskname do |t, args|
-  require "daemons"
-  taskname = args[:taskname]
-  puts "about to run 'rake #{taskname}' as a daemon..."
-    Daemons.call(:multiple => false) do
-      loop {
-        # Rake::Task["#{taskname}"].invoke
-        `bundle exec rake #{taskname}`
-      }
-    end
-end 
-
 namespace :resquebus do
   task :setup
 
