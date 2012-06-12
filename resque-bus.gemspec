@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
   # s.add_development_dependency "rspec"
   # s.add_runtime_dependency "rest-client"
   s.add_dependency('resque', '>= 1.10.0')
+  s.add_dependency('daemons', '>= 1.1.8')
   s.add_dependency("redis-namespace")
   s.add_dependency("redis")
   
