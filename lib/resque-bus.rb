@@ -6,6 +6,7 @@ require 'resque_bus/application'
 require 'resque_bus/driver'
 require 'resque_bus/rider'
 require 'resque_bus/dispatch'
+require 'resque_bus/patches'
 
 module ResqueBus
   extend self
