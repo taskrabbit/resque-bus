@@ -27,7 +27,7 @@ Application B is subscribed to events
       end
       
       # processes event on app_b_critical queue
-      critical "user_paid" do |attributes|
+      subscribe "app_b_critical" do |attributes|
         CreditCard.charge!(attributes)
       end
       
