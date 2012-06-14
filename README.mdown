@@ -22,14 +22,18 @@ Application B is subscribed to events
     # initializer
     ResqueBus.dispatch do
       # processes event on app_b_default queue
+      # process is short-hand to subscribe to your 'default' queue and this block with process events with the name "user_created"
       subscribe "user_created" do |attributes|
         NameCount.find_or_create_by_name(attributes["last_name"]).increment!
       end
       
       # processes event on app_b_critical queue
+      # critical is short-hand to subscribe to your 'critical' queue and this block with process events with the name "user_paid"
       critical "user_paid" do |attributes|
         CreditCard.charge!(attributes)
       end
+
+      # you can pass any queue name you would like to process from as well IE: `bannana "peeled" do |attributes|`
       
       # you can leave the attributes off if you like
       subscribe "user_homepage_visit" do
