@@ -18,6 +18,9 @@ module ResqueBus
   def application
     @application ||= Application.new("unknown")
   end
+  def app_key
+    application.app_key
+  end
   
   def dispatch(&block)
     @dispatcher = Dispatch.new
