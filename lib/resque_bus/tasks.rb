@@ -61,7 +61,7 @@ namespace :resquebus do
   end
 
   desc "Start a ResqueBus worker"
-  task :work => [ :preload, :setup ] do
+  task :work => [ :preload, :setup, :subscribe ] do
     queues = (ENV['QUEUES'] || ENV['QUEUE']).to_s.split(',')
     queues = ResqueBus.application.queues if queues.size == 0
     resquebus_work_queues(queues)

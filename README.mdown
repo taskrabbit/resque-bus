@@ -22,14 +22,18 @@ Application B is subscribed to events
     # initializer
     ResqueBus.dispatch do
       # processes event on app_b_default queue
+      # process is short-hand to subscribe to your 'default' queue and this block with process events with the name "user_created"
       subscribe "user_created" do |attributes|
         NameCount.find_or_create_by_name(attributes["last_name"]).increment!
       end
       
       # processes event on app_b_critical queue
+      # critical is short-hand to subscribe to your 'critical' queue and this block with process events with the name "user_paid"
       critical "user_paid" do |attributes|
         CreditCard.charge!(attributes)
       end
+
+      # you can pass any queue name you would like to process from as well IE: `bannana "peeled" do |attributes|`
       
       # you can leave the attributes off if you like
       subscribe "user_homepage_visit" do
@@ -78,6 +82,25 @@ That will use the default (resque) namespace which can be helpful for using the 
     Resque.redis = "192.168.1.0:6379"
     ResqusBus.redis.namespace = :get_on_the_bus
     ResqueBus.app_key = "app_a"   
+
+
+### Local Mode
+
+For development, a local mode is also provided and is specified in the
+configuration.
+
+    # config
+    ResqueBus.local_mode = :standalone
+    or 
+    ResqueBus.local_mode = :inline
+
+Standalone mode does not require a separate resquebus:driver task to be running to process the
+incoming queue. Simply publishing to the bus will distribute the incoming events 
+to the appropriate application specific queue.  A separate resquebus:work task does 
+still need to be run to process these events
+
+Inline mode skips queue processing entirely and directly dispatches the
+event to the appropriate code block. 
 
 
 ### TODO
