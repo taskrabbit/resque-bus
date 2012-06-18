@@ -1,7 +1,9 @@
 # Creates a DSL for apps to define their blocks to run for event_types
+require 'resque_bus/util'
 
 module ResqueBus
   class Dispatch
+    include ResqueBus::Util
     attr_reader :subscriptions
     
     def initialize
@@ -29,7 +31,7 @@ module ResqueBus
         # TODO: log that it's not there
       end
     end
-    
+
     def event_queues
       out = {}
       subscriptions.each do |event_type, tuple|
@@ -37,6 +39,10 @@ module ResqueBus
         out[event_type] = queue
       end
       out
+    end
+
+    def subscription_matches(event_type)
+      subscriptions.keys.select { |k|  event_matches?(k, event_type) }
     end
     
     protected
