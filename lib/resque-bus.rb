@@ -90,7 +90,7 @@ module ResqueBus
     to_publish = publish_metadata(event_type, attributes)
     ResqueBus.log_application("Event published: #{event_type} #{to_publish.inspect}")
     if local_mode
-      ResqueBus::Local.perform(event_type, attributes )
+      ResqueBus::Local.perform(event_type, to_publish )
     else
       enqueue_to(incoming_queue, Driver, event_type, to_publish)
     end
