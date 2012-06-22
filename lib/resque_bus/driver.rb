@@ -1,7 +1,7 @@
 module ResqueBus
   # fans out an event to multiple queues
   class Driver
-    
+
     def self.queue_matches(event_type)
       out = []
       Application.all.each do |app|
@@ -11,10 +11,10 @@ module ResqueBus
       end
       out
     end
-    
+
     def self.perform(event_type, attributes = {})
       raise "No event type passed" if event_type == nil || event_type == ""
-      
+
       ResqueBus.log_worker("Driver running: #{event_type} #{attributes.inspect}")
 
       queue_matches(event_type).each do |tuple|

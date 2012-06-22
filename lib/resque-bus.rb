@@ -23,7 +23,7 @@ module ResqueBus
   end
   
   def dispatch(&block)
-    @dispatcher = Dispatch.new
+    @dispatcher ||= Dispatch.new
     @dispatcher.instance_eval(&block)
     @dispatcher
   end
