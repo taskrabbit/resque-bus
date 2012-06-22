@@ -95,6 +95,8 @@ namespace :resquebus do
     end
     
     # change the namespace to be the ones used by ResqueBus
+    # save the old one for handling later
+    ResqueBus.original_redis = Resque.redis
     Resque.redis = ResqueBus.redis
   end
   

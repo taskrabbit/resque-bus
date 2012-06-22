@@ -1,28 +1,6 @@
 require 'spec_helper' 
 
 module ResqueBus
-  class Runner
-    def self.value
-      @value ||= 0
-    end
-    
-    def self.attributes
-      @attributes
-    end
-    
-    def self.run(attrs)
-      @value ||= 0
-      @value += 1
-      @attributes = attrs
-    end
-  end
-  
-  class Runner1 < Runner
-  end
-  
-  class Runner2 < Runner
-  end
-  
   describe Dispatch do
     it "should not start with any applications" do
       Dispatch.new.subscriptions.should == {}
@@ -51,7 +29,7 @@ module ResqueBus
     
     describe "Top Level" do
       before(:each) do
-        ResqueBus.dispatcher.should be_nil
+        ResqueBus.dispatcher.size.should == 0
 
          ResqueBus.dispatch do
            subscribe "event1" do |attributes|

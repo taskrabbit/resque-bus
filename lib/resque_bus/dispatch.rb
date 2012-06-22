@@ -8,6 +8,10 @@ module ResqueBus
       @subscriptions = {}
     end
     
+    def size
+      @subscriptions.size
+    end
+    
     def subscribe(event_type, &block)
       register_event("default", event_type, block)
     end

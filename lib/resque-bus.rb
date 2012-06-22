@@ -29,7 +29,7 @@ module ResqueBus
   end
   
   def dispatcher
-    @dispatcher
+    @dispatcher ||= Dispatch.new
   end
 
   def local_mode=value
@@ -76,6 +76,13 @@ module ResqueBus
     copy.namespace = default_namespace
     self.redis = copy
     self.redis
+  end
+  
+  def original_redis=(server)
+    @original_redis = server
+  end
+  def original_redis
+    @original_redis
   end
   
   def publish_metadata(event_type, attributes={})
