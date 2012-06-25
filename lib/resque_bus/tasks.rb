@@ -3,15 +3,6 @@
 
 namespace :resquebus do
 
-  Rake::Task["resque:setup"].enhance do
-    Rake::Task["resquebus:reconnect"].invoke
-  end
-
-  task :reconnect do 
-    puts "reconnecting to redis"
-    Resque.redis.client.reconnect
-  end
-
   desc "Setup will configure a resque task to run before resque:work"
   task :setup => [ :preload ] do
     # Resque.setup # I don't think this does anything? https://github.com/defunkt/resque/blob/master/lib/resque/tasks.rb#L4s
@@ -23,11 +14,26 @@ namespace :resquebus do
     end
     ResqueBus.original_redis = Resque.redis # cache the real resque information if your app uses resque and resque_bus
     Resque.redis = ResqueBus.redis  # switch this worker to go against resque_bus (common) redis
+    $resquebus_config = {
+      :db => ResqueBus.redis.client.db,
+      :host => ResqueBus.redis.client.host,
+      :logger => ResqueBus.redis.client.logger,
+      :password => ResqueBus.redis.client.password,
+      :path => ResqueBus.redis.client.path,
+      :port => ResqueBus.redis.client.port,
+      :timeout => ResqueBus.redis.client.timeout
+    }
     if queues.size == 1
       puts "  >>  Working Queue : #{queues.first}"
     else
       puts "  >>  Working Queues: #{queues.join(", ")}"
     end
+    Resque.after_fork = Proc.new {
+      if ResqueBus
+        # puts "reconnecting to Resque Bus' Redis"
+        ResqueBus.redis = Redis.new $resquebus_config
+      end
+    }
   end
 
   desc "Subscribes this application to ResqueBus events"
