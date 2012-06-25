@@ -23,6 +23,7 @@ namespace :resquebus do
       :port => ResqueBus.redis.client.port,
       :timeout => ResqueBus.redis.client.timeout
     }
+    Rake::Task["resquebus:subscribe"].invoke
     if queues.size == 1
       puts "  >>  Working Queue : #{queues.first}"
     else
