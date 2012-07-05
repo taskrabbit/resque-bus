@@ -5,7 +5,45 @@ require 'timecop'
 
 require 'resque-bus'
 
+module ResqueBus
+  class Runner
+    def self.value
+      @value ||= 0
+    end
+    
+    def self.attributes
+      @attributes
+    end
+    
+    def self.run(attrs)
+      @value ||= 0
+      @value += 1
+      @attributes = attrs
+    end
+    
+    def self.reset
+      @value = nil
+      @attributes = nil
+    end
+  end
+  
+  class Runner1 < Runner
+  end
+  
+  class Runner2 < Runner
+  end
+end
+
+def perform_next_job(worker, &block)
+  return unless job = @worker.reserve
+  @worker.perform(job, &block)
+  @worker.done_working
+end
+
+
 RSpec.configure do |config|
+  config.mock_framework = :mocha
+  
   config.before(:each) do
     ResqueBus.send(:reset)
     ResqueBus.app_key = "test"
@@ -16,6 +54,8 @@ RSpec.configure do |config|
     rescue
     end
     ResqueBus.send(:reset)
+    ResqueBus::Runner1.reset
+    ResqueBus::Runner2.reset
   end
 end
 

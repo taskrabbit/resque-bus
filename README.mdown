@@ -54,11 +54,11 @@ Application B is subscribed to events
 
 The subscription block is run inside a Resque worker which needs to be started for each app.
 
-    $ rake resquebus:work
+    $ rake resquebus:setup resque:work
     
 The incoming queue also needs to be processed on a dedicated or all the app servers.
 
-    $ rake resquebus:driver
+    $ rake resquebus:driver resque:work
     
 
 ### Compatibility
