@@ -2,7 +2,40 @@
 # will give you the resquebus tasks
 
 namespace :resquebus do
-  task :setup
+
+  desc "Setup will configure a resque task to run before resque:work"
+  task :setup => [ :preload ] do
+    # Resque.setup # I don't think this does anything? https://github.com/defunkt/resque/blob/master/lib/resque/tasks.rb#L4s
+    if ENV['QUEUES'].nil?
+      queues = ResqueBus.application.queues
+      ENV['QUEUES'] = queues.join(",")
+      Rake::Task["resquebus:subscribe"].invoke 
+    else
+      queues = ENV['QUEUES'].split(",")
+    end
+    ResqueBus.original_redis = Resque.redis # cache the real resque information if your app uses resque and resque_bus
+    Resque.redis = ResqueBus.redis  # switch this worker to go against resque_bus (common) redis
+    $resquebus_config = {
+      :db => ResqueBus.redis.client.db,
+      :host => ResqueBus.redis.client.host,
+      :logger => ResqueBus.redis.client.logger,
+      :password => ResqueBus.redis.client.password,
+      :path => ResqueBus.redis.client.path,
+      :port => ResqueBus.redis.client.port,
+      :timeout => ResqueBus.redis.client.timeout
+    }
+    if queues.size == 1
+      puts "  >>  Working Queue : #{queues.first}"
+    else
+      puts "  >>  Working Queues: #{queues.join(", ")}"
+    end
+    Resque.after_fork = Proc.new {
+      if ResqueBus
+        # puts "reconnecting to Resque Bus' Redis"
+        ResqueBus.redis = Redis.new $resquebus_config
+      end
+    }
+  end
 
   desc "Subscribes this application to ResqueBus events"
   task :subscribe => [ :preload, :setup ] do
@@ -22,66 +55,15 @@ namespace :resquebus do
     puts "...done"
   end
   
-  def resquebus_work_queues(queues)
-    require 'resque-bus'
-    # use the ones for this application
-    
-    if queues.size == 1
-      puts "Working Queue : #{queues.first}"
-    else
-      puts "Working Queues: #{queues.join(", ")}"
-    end
-    begin
-      worker = Resque::Worker.new(*queues)
-      worker.verbose = ENV['LOGGING'] || ENV['VERBOSE']
-      worker.very_verbose = ENV['VVERBOSE']
-    rescue Resque::NoQueueError
-      abort "set QUEUE env var, e.g. $ QUEUE=critical,high rake resque:work"
-    end
-
-    if ENV['BACKGROUND']
-      unless Process.respond_to?('daemon')
-          abort "env var BACKGROUND is set, which requires ruby >= 1.9"
-      end
-      Process.daemon(true)
-    end
-
-    if ENV['PIDFILE']
-      File.open(ENV['PIDFILE'], 'w') { |f| f << worker.pid }
-    end
-
-    worker.log "Starting worker #{worker}"
-
-    worker.work(ENV['INTERVAL'] || 5) # interval, will block
-  end
-  
-  desc "Start the ResqueBus driver"
-  task :driver => [ :preload, :setup ] do
-    resquebus_work_queues(["resquebus_incoming"])
-  end
-
-  desc "Start a ResqueBus worker"
-  task :work => [ :preload, :setup, :subscribe ] do
-    queues = (ENV['QUEUES'] || ENV['QUEUE']).to_s.split(',')
-    queues = ResqueBus.application.queues if queues.size == 0
-    resquebus_work_queues(queues)
-  end
-
-  desc "Start multiple ResqueBus workers. Should only be used in dev mode."
-  task :workers do
-    threads = []
-
-    ENV['COUNT'].to_i.times do
-      threads << Thread.new do
-        system "rake resquebus:work"
-      end
-    end
-
-    threads.each { |thread| thread.join }
+  desc "Start the ResqueBus driver.  Use: `rake resquebus:driver resque:work`"
+  task :driver => [ :preload ] do
+    # resquebus_work_queues(["resquebus_incoming"])
+    ENV['QUEUES'] = "resquebus_incoming"
+    Rake::Task["resquebus:setup"].invoke
   end
 
   # Preload app files if this is Rails
-  task :preload => :setup do
+  task :preload do
     require "resque"
     require "resque-bus"
     
