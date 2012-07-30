@@ -1,6 +1,8 @@
 # require 'resquebus/tasks'
 # will give you the resquebus tasks
 
+require "resque/tasks"
+
 namespace :resquebus do
 
   desc "Setup will configure a resque task to run before resque:work"
