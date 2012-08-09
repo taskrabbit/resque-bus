@@ -31,12 +31,12 @@ namespace :resquebus do
     else
       puts "  >>  Working Queues: #{queues.join(", ")}"
     end
-    Resque.after_fork = Proc.new {
-      if ResqueBus
+    if ResqueBus && Resque.after_fork.nil?
+      Resque.after_fork = Proc.new {
         # puts "reconnecting to Resque Bus' Redis"
         ResqueBus.redis = Redis.new $resquebus_config
-      end
-    }
+      }
+    end
   end
 
   desc "Subscribes this application to ResqueBus events"
