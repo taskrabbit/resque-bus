@@ -17,6 +17,18 @@ module ResqueBus
       raise "Invalid application name" if @app_key.gsub("_", "").size == 0
     end
     
+    def queue_names(event_types)
+      # given a hash
+      queues = []
+      event_types.each do |event, queue|
+        queue = self.class.normalize(queue)
+        queue = "default" if queue.size == 0
+        queue = "#{app_key}_#{queue}"
+        queues << queue
+      end
+      queues.uniq
+    end
+    
     def subscribe(event_types)
       if event_types == nil || event_types.to_s == "" || event_types == [] || event_types == {}
         unsubscribe
@@ -25,7 +37,6 @@ module ResqueBus
       
       temp_key = "temp_#{redis_key}:#{rand(999999999)}"
       
-      queues = []
       # if event_types is an array, make a hash wih the default queue #{app_name}_#{default_queue}
       if event_types.is_a? Hash
         event_types.each do |event, queue|
@@ -33,14 +44,12 @@ module ResqueBus
           queue = "default" if queue.size == 0
           queue = "#{app_key}_#{queue}"
           ResqueBus.redis.hset(temp_key, event.to_s, queue)
-          queues << queue
         end
       else
         event_types = [event_types] unless event_types.is_a? Array
         event_types.each do |type|
           queue = "#{app_key}_default"
           ResqueBus.redis.hset(temp_key, type.to_s, queue)
-          queues << queue
         end
       end
 

@@ -9,7 +9,9 @@ namespace :resquebus do
   task :setup => [ :preload ] do
     
     if ENV['QUEUES'].nil?
-      queues = ResqueBus.application.queues
+      # let's not talk to redis in here. Seems to screw things up
+      event_queues = ResqueBus.dispatcher.event_queues
+      queues = ResqueBus.application.queue_names(event_queues)
       ENV['QUEUES'] = queues.join(",")
     else
       queues = ENV['QUEUES'].split(",")
@@ -31,7 +33,6 @@ namespace :resquebus do
 
   desc "Subscribes this application to ResqueBus events"
   task :subscribe => [ :preload ] do
-    require 'resque-bus'
     event_queues = ResqueBus.dispatcher.event_queues
     raise "No Queues registered" if event_queues.size == 0
     puts "Registering: #{event_queues.inspect}..."
@@ -78,8 +79,7 @@ namespace :resquebus do
     end
     
     desc "Sets up an example config"
-    task :register => [ "resquebus:preload", "resquebus:setup" ] do
-      require 'resque-bus'
+    task :register => [ "resquebus:preload"] do
       ResqueBus.app_key = "example"
       
       ResqueBus.dispatch do
@@ -105,7 +105,7 @@ namespace :resquebus do
     task :subscribe => [ :register, "resquebus:subscribe" ]
     
     desc "Start a ResqueBus example worker"
-    task :work => [ :register, "resquebus:work" ]
+    task :work => [ :register, "resquebus:setup", "resque:work" ]
     
     desc "Start a ResqueBus example worker"
     task :driver => [ :register, "resquebus:driver" ]
