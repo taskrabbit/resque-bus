@@ -64,6 +64,8 @@ namespace :resquebus do
     # save the old one for handling later
     ResqueBus.original_redis = Resque.redis
     Resque.redis = ResqueBus.redis
+    
+    Rake::Task["resque:setup"].invoke # loads the environment and such if defined
   end
   
   
