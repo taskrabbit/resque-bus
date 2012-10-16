@@ -8,8 +8,14 @@ module ResqueBus
     def self.included(base)
       base.class_eval {
 
-        get "/bus/?" do
+        get "/bus" do
           erb File.read(File.join(File.dirname(__FILE__), "server/views/bus.erb"))
+        end
+        
+        
+        post '/bus/unsubscribe' do
+          ResqueBus.unsubscribe(params[:name])
+          redirect u('bus')
         end
         
       }

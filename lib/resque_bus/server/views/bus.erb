@@ -1,3 +1,17 @@
+
+<script LANGUAGE="JavaScript">
+<!--
+function confirmSubmit()
+{
+var agree=confirm("Are you sure you wish to continue?");
+if (agree)
+	return true ;
+else
+	return false ;
+}
+// -->
+</script>
+
 <%
   app_hash = {}
   event_hash = {}
@@ -25,7 +39,13 @@
   end
   
   # helper to display either
-  def display_row(name, val, first=false)
+  def display_row(name, val, button=nil, first=false)
+    form = ""
+    if button
+      text, url = button
+      form = "<form method='POST' action='#{u url}' style='float:left; padding:0 5px 0 0;margin:0;'><input type='submit' name='' value='#{text}' style='padding:0;margin:0;' onclick=\"return confirmSubmit();\"/><input type='hidden' name='name' value='#{h(name)}' /></form>"
+    end
+    
     if !val
       out = "<td>&nbsp;</td><td>&nbsp;</td>"
     else
@@ -34,25 +54,27 @@
     end
     
     if first
-      "<tr><td>#{h(name)}</td>#{out}</tr>\n"
+      "<tr><td>#{h(name)}#{form}</td>#{out}</tr>\n"
     else
       "<tr><td>&nbsp;</td>#{out}</tr>\n"
     end
   end
   
-  def output_hash(hash)
+  def output_hash(hash, action=nil)
     out = ""
     hash.keys.sort.each do |item|
       display = hash[item]
       first = display.shift
-      out << display_row(item, first, true)
+      out << display_row(item, first, action, true)
       display.each do |val|
-        out << display_row(item, val)
+        out << display_row(item, val, action)
       end
     end
     out
   end
 %>
+
+
 
 <h1 class='wi'>Applications</h1>
 <p class='intro'>The apps below have registered the given event types and queues.</p>
@@ -62,7 +84,7 @@
     <th>Event Type</th>
     <th>Queue</th>
   </tr>
-  <%= output_hash(app_hash) %>
+  <%= output_hash(app_hash, ["Unsubscribe", "bus/unsubscribe"]) %>
 </table>
 
 <p>&nbsp;</p>
@@ -75,5 +97,5 @@
     <th>App Key</th>
     <th>Queue</th>
   </tr>
-  <%= output_hash(event_hash) %>
+  <%= output_hash(event_hash, false) %>
 </table>
