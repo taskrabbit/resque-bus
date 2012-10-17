@@ -2,6 +2,7 @@
 # will give you the resquebus tasks
 
 require "resque/tasks"
+require 'resque/failure/redis'
 
 namespace :resquebus do
 
@@ -64,6 +65,9 @@ namespace :resquebus do
     # save the old one for handling later
     ResqueBus.original_redis = Resque.redis
     Resque.redis = ResqueBus.redis
+    
+    Resque::Failure::MultipleWithRetrySuppression.classes = [Resque::Failure::Redis]
+    Resque::Failure.backend = Resque::Failure::MultipleWithRetrySuppression
     
     Rake::Task["resque:setup"].invoke # loads the environment and such if defined
   end
