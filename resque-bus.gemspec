@@ -29,7 +29,6 @@ Gem::Specification.new do |s|
   s.add_dependency("redis")
   
   s.add_development_dependency("rspec")
-  s.add_development_dependency("mocha")
   s.add_development_dependency("timecop")
   s.add_development_dependency("json_pure")
   # TODO if 1.9 do the other one

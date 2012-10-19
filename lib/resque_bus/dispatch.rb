@@ -30,6 +30,7 @@ module ResqueBus
     def execute(event_type, attributes)
       queue, proc = subscriptions[event_type.to_s]
       if proc
+        attributes = attributes.with_indifferent_access if attributes.respond_to?(:with_indifferent_access)
         proc.call(attributes)
       else
         # TODO: log that it's not there

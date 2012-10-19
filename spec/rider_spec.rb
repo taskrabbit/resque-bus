@@ -3,7 +3,7 @@ require 'spec_helper'
 module ResqueBus
   describe Rider do
     it "should call execute" do
-      ResqueBus.dispatcher.expects(:execute)
+      ResqueBus.dispatcher.should_receive(:execute)
       Rider.perform("event_name", { "ok" => true })
     end
     

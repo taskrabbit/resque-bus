@@ -1,6 +1,5 @@
 require 'rubygems'
 require 'bundler/setup'
-require "mocha"
 require 'timecop'
 
 require 'resque-bus'
@@ -42,7 +41,7 @@ end
 
 
 RSpec.configure do |config|
-  config.mock_framework = :mocha
+  config.mock_framework = :rspec
   
   config.before(:each) do
     ResqueBus.send(:reset)

@@ -90,7 +90,7 @@ module ResqueBus
       end
       it "should call unsubscribe" do
         app = Application.new("myapp")
-        app.expects(:unsubscribe)
+        app.should_receive(:unsubscribe)
         app.subscribe("")
       end
     end
