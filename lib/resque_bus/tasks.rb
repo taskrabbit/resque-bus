@@ -1,8 +1,8 @@
 # require 'resquebus/tasks'
 # will give you the resquebus tasks
 
+
 require "resque/tasks"
-require 'resque/failure/redis'
 
 namespace :resquebus do
 
@@ -11,8 +11,8 @@ namespace :resquebus do
     
     if ENV['QUEUES'].nil?
       # let's not talk to redis in here. Seems to screw things up
-      event_queues = ResqueBus.dispatcher.event_queues
-      queues = ResqueBus.application.queue_names(event_queues)
+      subscriptions = ResqueBus.dispatcher.subscriptions
+      queues = ResqueBus.application.no_connect_queue_names_for(subscriptions)
       ENV['QUEUES'] = queues.join(",")
     else
       queues = ENV['QUEUES'].split(",")
@@ -34,10 +34,11 @@ namespace :resquebus do
 
   desc "Subscribes this application to ResqueBus events"
   task :subscribe => [ :preload ] do
-    event_queues = ResqueBus.dispatcher.event_queues
-    raise "No Queues registered" if event_queues.size == 0
-    puts "Registering: #{event_queues.inspect}..."
-    ResqueBus.application.subscribe(event_queues)
+    subscriptions = ResqueBus.dispatcher.subscriptions
+    raise "No subscriptions registered" if subscriptions.size == 0
+    app = ResqueBus.application
+    puts "Subscribing #{app.app_key} to #{subscriptions.size} subscriptions."
+    app.subscribe(subscriptions, true)
     puts "...done"
   end
   
@@ -60,6 +61,7 @@ namespace :resquebus do
   task :preload do
     require "resque"
     require "resque-bus"
+    require "resque/failure/redis"
 
     # change the namespace to be the ones used by ResqueBus
     # save the old one for handling later

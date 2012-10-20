@@ -3,9 +3,9 @@ require 'spec_helper'
 module ResqueBus
   describe Driver do
     before(:each) do
-      ResqueBus.subscribe("app1", ["event1", "event2", "event3"])
-      ResqueBus.subscribe("app2", {"event2" => "other", "event4" => "more"})
-      ResqueBus.subscribe("app3", ["event[45]", "event5", "event6"])
+      Application.new("app1").subscribe(test_list(test_sub("event1"), test_sub("event2"), test_sub("event3")))
+      Application.new("app2").subscribe(test_list(test_sub("event2","other"), test_sub("event4", "more")))
+      Application.new("app3").subscribe(test_list(test_sub("event[45]"), test_sub("event5"), test_sub("event6")))
       Timecop.freeze
     end
     after(:each) do

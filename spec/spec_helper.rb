@@ -39,6 +39,18 @@ def perform_next_job(worker, &block)
   @worker.done_working
 end
 
+def test_sub(event_name, queue="default")
+  ResqueBus::Subscription.new(queue, event_name, {}, nil)
+end
+
+def test_list(*args)
+  out = ResqueBus::SubscriptionList.new
+  args.each do |sub|
+    out.add(sub)
+  end
+  out
+end
+
 
 RSpec.configure do |config|
   config.mock_framework = :rspec

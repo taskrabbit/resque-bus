@@ -21,7 +21,7 @@ else
     app_key = app.app_key
     
     app_hash[app_key] ||= []
-    app.event_display.each do |tuple|
+    app.event_display_tuples.each do |tuple|
       event, queue = tuple
       app_hash[app_key] << [event, queue]
       

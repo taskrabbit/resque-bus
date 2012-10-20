@@ -2,6 +2,8 @@ require 'redis/namespace'
 require 'resque'
 
 require "resque_bus/version"
+require 'resque_bus/subscription'
+require 'resque_bus/subscription_list'
 require 'resque_bus/application'
 require 'resque_bus/driver'
 require 'resque_bus/local'
@@ -104,14 +106,6 @@ module ResqueBus
     else
       enqueue_to(incoming_queue, Driver, event_type, to_publish)
     end
-  end
-  
-  def subscribe(app_name, event_types)
-    Application.new(app_name).subscribe(event_types)
-  end
-  
-  def unsubscribe(app_name)
-    Application.new(app_name).unsubscribe
   end
   
   def enqueue_to(queue, klass, event_type_or_match, attributes)

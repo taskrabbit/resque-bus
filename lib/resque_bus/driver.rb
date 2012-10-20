@@ -5,9 +5,8 @@ module ResqueBus
     def self.queue_matches(event_type)
       out = []
       Application.all.each do |app|
-        app.event_matches(event_type).each do |match, queue_name|
-          out << [match, queue_name]
-        end
+        tuples = app.subscription_tuples(event_type)
+        out.concat(tuples)
       end
       out
     end

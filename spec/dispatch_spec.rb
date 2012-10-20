@@ -3,7 +3,7 @@ require 'spec_helper'
 module ResqueBus
   describe Dispatch do
     it "should not start with any applications" do
-      Dispatch.new.subscriptions.should == {}
+      Dispatch.new.subscriptions.size.should == 0
     end
     
     it "should register code to run and execute it" do
@@ -11,8 +11,8 @@ module ResqueBus
       dispatch.subscribe("my_event") do |attrs|
         Runner1.run(attrs)
       end
-      queue, proc = dispatch.subscriptions["my_event"]
-      proc.is_a?(Proc).should == true
+      sub = dispatch.subscriptions.key("my_event")
+      sub.send(:executor).is_a?(Proc).should == true
 
       Runner.value.should == 0
       dispatch.execute("my_event", {:ok => true})
@@ -62,9 +62,14 @@ module ResqueBus
         Runner2.value.should == 3
       end
       
-      it "should be able to fetch queues" do
-        ResqueBus.dispatcher.event_queues.should == { "event1" => "default", "event2" => "default", 
-                                                      "event3" => "high", "(?-mix:^patt.+ern)" => "low"}
+      it "should return the subscriptions" do
+        subs = ResqueBus.dispatcher.subscriptions.all
+        tuples = subs.collect{ |sub| [sub.event_name, sub.queue_name]}
+        tuples.should =~ [  ["event1", "default"],
+                            ["event2", "default"],
+                            ["event3", "high"],
+                            [ "(?-mix:^patt.+ern)", "low"]
+                         ]
       end
     
     end

@@ -8,14 +8,15 @@ module ResqueBus
       ResqueBus.log_worker("Local running: #{event_type} #{attributes.inspect}")
 
       # looking for subscriptions, not queues
-      subscription_matches(event_type).each do |match|
+      subscription_matches(event_type).each do |sub|
+        to_publish = bus_attr.merge(attributes || {})
         bus_attr = {"bus_event_type" => event_type, "bus_driven_at" => Time.now.to_i } # "bus_rider_queue" => queue_name}
         if ResqueBus.local_mode == :standalone
-          queue_name =  ResqueBus.application.event_queues[match]
-          ResqueBus.enqueue_to(queue_name, Rider, match, bus_attr.merge(attributes || {}))
+          queue_name =  "#{ResqueBus.application.app_key}_#{sub.queue_name}"
+          ResqueBus.enqueue_to(queue_name, Rider, sub.key, to_publish)
         # defaults to inline mode
         else ResqueBus.local_mode == :inline
-          ResqueBus.dispatcher.execute(match, bus_attr.merge(attributes || {} ))
+          sub.execute!(to_publish)
         end
       end
     end
