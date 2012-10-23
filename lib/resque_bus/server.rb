@@ -14,7 +14,7 @@ module ResqueBus
         
         
         post '/bus/unsubscribe' do
-          ResqueBus.unsubscribe(params[:name])
+          app = Application.new(params[:name]).unsubscribe
           redirect u('bus')
         end
         
