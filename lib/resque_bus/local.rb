@@ -9,8 +9,8 @@ module ResqueBus
 
       # looking for subscriptions, not queues
       subscription_matches(event_type).each do |sub|
-        to_publish = bus_attr.merge(attributes || {})
         bus_attr = {"bus_event_type" => event_type, "bus_driven_at" => Time.now.to_i } # "bus_rider_queue" => queue_name}
+        to_publish = bus_attr.merge(attributes || {})
         if ResqueBus.local_mode == :standalone
           queue_name =  "#{ResqueBus.application.app_key}_#{sub.queue_name}"
           ResqueBus.enqueue_to(queue_name, Rider, sub.key, to_publish)
