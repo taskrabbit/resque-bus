@@ -13,7 +13,7 @@ describe "Publising an event" do
                      "bus_app_key" => "test",
                      "created_at" => Time.now.to_i,
                      "bus_id"=>"test::#{the_id}",
-                     "bus_app_hostname" =>  `hostname`.strip.sub(/.local/,'')} }
+                     "bus_app_hostname" =>  `hostname`.strip} }
   
   it "should add it to Redis" do
     hash = {:one => 1, "two" => "here", "id" => the_id }
