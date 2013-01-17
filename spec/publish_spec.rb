@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "Publising an event" do
+describe "Publishing an event" do
   
   before(:each) do
     Timecop.freeze

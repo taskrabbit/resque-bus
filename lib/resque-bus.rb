@@ -5,6 +5,7 @@ require "resque_bus/version"
 require 'resque_bus/subscription'
 require 'resque_bus/subscription_list'
 require 'resque_bus/application'
+require 'resque_bus/publisher'
 require 'resque_bus/driver'
 require 'resque_bus/local'
 require 'resque_bus/rider'
@@ -98,7 +99,6 @@ module ResqueBus
   end
   
   def publish(event_type, attributes = {})
-    # TDOO: add logging. It will be important to be able to follow these through, say in splunk.
     to_publish = publish_metadata(event_type, attributes)
     ResqueBus.log_application("Event published: #{event_type} #{to_publish.inspect}")
     if local_mode
@@ -106,6 +106,16 @@ module ResqueBus
     else
       enqueue_to(incoming_queue, Driver, event_type, to_publish)
     end
+  end
+  
+  def publish_at(timestamp_or_epoch, event_type, attributes = {})
+    to_publish = publish_metadata(event_type, attributes)
+    to_publish["bus_delayed_until"] ||= timestamp_or_epoch.to_i
+    to_publish.delete("bus_published_at") unless attributes["bus_published_at"] # will be put on when it actually does it
+    
+    ResqueBus.log_application("Event published:#{event_type} #{to_publish.inspect} publish_at: #{timestamp_or_epoch.to_i}")
+    item = delayed_job_to_hash_with_queue(incoming_queue, Publisher, [event_type, to_publish])
+    delayed_push(timestamp_or_epoch, item)
   end
   
   def enqueue_to(queue, klass, event_type_or_match, attributes)
@@ -148,7 +158,6 @@ module ResqueBus
   end
 
   def default_namespace
-    # TODO: should we do a different one?
     # It might play better on the same server, but overall life is more complicated
     :resque
   end
@@ -179,6 +188,25 @@ module ResqueBus
   # Don't call this directly.
   def watch_queue(queue)
     redis.sadd(:queues, queue.to_s)
+  end
+  
+  ### From Resque Scheduler
+  # Used internally to stuff the item into the schedule sorted list.
+  # +timestamp+ can be either in seconds or a datetime object
+  # Insertion if O(log(n)).
+  # Returns true if it's the first job to be scheduled at that time, else false
+  def delayed_push(timestamp, item)
+    # First add this item to the list for this timestamp
+    redis.rpush("delayed:#{timestamp.to_i}", Resque.encode(item))
+
+    # Now, add this timestamp to the zsets.  The score and the value are
+    # the same since we'll be querying by timestamp, and we don't have
+    # anything else to store.
+    redis.zadd :delayed_queue_schedule, timestamp.to_i, timestamp.to_i
+  end
+  
+  def delayed_job_to_hash_with_queue(queue, klass, args)
+    {:class => klass.to_s, :args => args, :queue => queue}
   end
   
 end

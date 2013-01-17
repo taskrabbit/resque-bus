@@ -12,6 +12,9 @@ Application A can publish an event
 
     # business logic
     ResqueBus.publish("user_created", "id" => 42, "first_name" => "John", "last_name" => "Smith")
+    
+    # or do it later
+    ResqueBus.publish_at(1.hour.from_now, "user_created", "id" => 42, "first_name" => "John", "last_name" => "Smith")
 
 Application B is subscribed to events
 
@@ -60,6 +63,9 @@ The incoming queue also needs to be processed on a dedicated or all the app serv
 
     $ rake resquebus:driver resque:work
     
+If you want retry to work for subscribing apps, you should run resque-scheduler
+    
+    $ rake resquebus:driver resque:scheduler
 
 ### Compatibility
 
@@ -76,7 +82,7 @@ If no Redis instance is given specifically, ResqueBus will use the Resque one.
     Resque.redis = "192.168.1.0:6379"
     ResqueBus.app_key = "app_a"
 
-That will use the default (resque) namespace which can be helpful for using the tooling. Conflict with queue names are unlikely. You can change the namepsace if you like though.
+That will use the default (resque) namespace which can be helpful for using the tooling. Conflict with queue names are unlikely. You can change the namespace if you like though.
 
     # config
     Resque.redis = "192.168.1.0:6379"

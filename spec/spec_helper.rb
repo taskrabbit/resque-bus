@@ -52,6 +52,8 @@ def test_list(*args)
 end
 
 
+Resque::Scheduler.mute = true
+
 RSpec.configure do |config|
   config.mock_framework = :rspec
   
