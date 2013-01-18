@@ -116,6 +116,6 @@ namespace :resquebus do
     task :work => [ :register, "resquebus:setup", "resque:work" ]
     
     desc "Start a ResqueBus example worker"
-    task :driver => [ :register, "resquebus:driver" ]
+    task :driver => [ :register, "resquebus:driver", "resque:work" ]
   end
 end
