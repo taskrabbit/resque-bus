@@ -18,7 +18,8 @@ module ResqueBus
     @application = Application.new(key)
   end
   def application
-    @application ||= Application.new("unknown")
+    raise "Set application with ResqueBus.app_key='appname'" unless @application
+    @application
   end
   def app_key
     application.app_key
