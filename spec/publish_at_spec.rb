@@ -4,15 +4,15 @@ describe "Publishing an event in the future" do
   
   before(:each) do
     Timecop.freeze(now)
+    ResqueBus.stub(:generate_uuid).and_return("idfhlkj")
   end
   after(:each) do
     Timecop.return
   end
-  let(:the_id) { "idfhlkj" }
   let(:delayed_attrs) { {"bus_delayed_until" => future.to_i,
+                     "bus_id" => "test-#{now.to_i}-idfhlkj",
                      "bus_app_key" => "test",
                      "created_at" => now.to_i,
-                     "bus_id"=>"test::#{the_id}",
                      "bus_app_hostname" =>  `hostname 2>&1`.strip.sub(/.local/,'')} }
   
   let(:bus_attrs) { delayed_attrs.merge({"bus_published_at" => worktime.to_i})}
@@ -21,7 +21,7 @@ describe "Publishing an event in the future" do
   let(:worktime) {Time.at(future.to_i + 1)}
   
   it "should add it to Redis" do
-    hash = {:one => 1, "two" => "here", "id" => the_id }
+    hash = {:one => 1, "two" => "here", "id" => 12 }
     event_name = "event_name"
     ResqueBus.publish_at(future, event_name, hash)
     
@@ -32,12 +32,12 @@ describe "Publishing an event in the future" do
     hash = JSON.parse(val)
 
     hash["class"].should == "ResqueBus::Publisher"
-    hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1, "id" => the_id}.merge(delayed_attrs) ]
+    hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1, "id" => 12}.merge(delayed_attrs) ]
     hash["queue"].should == "resquebus_incoming"
   end
 
   it "should move it to the real queue when processing" do
-    hash = {:one => 1, "two" => "here", "id" => the_id }
+    hash = {:one => 1, "two" => "here", "id" => 12 }
     event_name = "event_name"
     
     val = ResqueBus.redis.lpop("queue:resquebus_incoming")
@@ -62,14 +62,14 @@ describe "Publishing an event in the future" do
       val = ResqueBus.redis.lpop("queue:resquebus_incoming")
       hash = JSON.parse(val)
       hash["class"].should == "ResqueBus::Publisher"
-      hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1, "id" => the_id}.merge(delayed_attrs) ]
+      hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1, "id" => 12}.merge(delayed_attrs) ]
       
      ResqueBus::Publisher.perform(*hash["args"])
      
      val = ResqueBus.redis.lpop("queue:resquebus_incoming")
      hash = JSON.parse(val)
      hash["class"].should == "ResqueBus::Driver"
-     hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1, "id" => the_id}.merge(bus_attrs) ]
+     hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1, "id" => 12}.merge(bus_attrs) ]
     end
   end
 

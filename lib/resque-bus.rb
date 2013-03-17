@@ -93,10 +93,22 @@ module ResqueBus
   
   def publish_metadata(event_type, attributes={})
     bus_attr = {"bus_published_at" => Time.now.to_i, "bus_app_key" => application.app_key, "created_at" => Time.now.to_i}
-    an_id = attributes["id"] || "#{Time.now.to_i}_#{rand(999999999)}"
-    bus_attr["bus_id"] = "#{application.app_key}::#{an_id}"
+    bus_attr["bus_id"] ||= "#{application.app_key}-#{Time.now.to_i}-#{generate_uuid}"
     bus_attr["bus_app_hostname"] = hostname
     bus_attr.merge(attributes || {})
+  end
+  
+  def generate_uuid
+    require 'securerandom' unless defined?(SecureRandom)
+    return SecureRandom.uuid
+    
+    rescue Exception => e
+      # secure random not there
+      # big random number a few times
+      n_bytes = [42].pack('i').size
+      n_bits = n_bytes * 8
+      max = 2 ** (n_bits - 2) - 1
+      return "#{rand(max)}-#{rand(max)}-#{rand(max)}"
   end
   
   def publish(event_type, attributes = {})

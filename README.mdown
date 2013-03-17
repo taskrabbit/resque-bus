@@ -25,7 +25,7 @@ Application B is subscribed to events
     # initializer
     ResqueBus.dispatch do
       # processes event on app_b_default queue
-      # process is short-hand to subscribe to your 'default' queue and this block with process events with the name "user_created"
+      # subscribe is short-hand to subscribe to your 'default' queue and this block with process events with the name "user_created"
       subscribe "user_created" do |attributes|
         NameCount.find_or_create_by_name(attributes["last_name"]).increment!
       end
