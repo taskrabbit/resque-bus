@@ -1,5 +1,5 @@
 module Resque
   module Bus
-    VERSION = "1.0.2"
+    VERSION = "1.0.4"
   end
 end
