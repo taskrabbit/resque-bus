@@ -1,11 +1,16 @@
 module ResqueBus
   class Application
-    attr_reader :app_key, :redis_key
+
+    class << self
     
-    def self.all
-      # note the names arent the same as we started with
-      ResqueBus.redis.smembers(app_list_key).collect{ |val| new(val) }
+      def all
+        # note the names arent the same as we started with
+        ResqueBus.redis.smembers(app_list_key).collect{ |val| new(val) }
+      end
     end
+
+    attr_reader :app_key, :redis_key
+
     
     def initialize(app_key)
       @app_key = self.class.normalize(app_key)

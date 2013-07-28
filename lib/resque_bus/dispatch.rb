@@ -2,7 +2,9 @@
 
 module ResqueBus
   class Dispatch
+
     attr_reader :app_key, :subscriptions
+    
     def initialize(app_key)
       @app_key = Application.normalize(app_key)
       @subscriptions = SubscriptionList.new
@@ -18,9 +20,9 @@ module ResqueBus
     
     # allows definitions of other queues
     def method_missing(method_name, *args, &block)
-      if args.size == 1 and block
+      if args.size == 1 && block
         dispatch_event(method_name, args[0], nil, block)
-      elsif args.size == 2 and block
+      elsif args.size == 2 && block
         dispatch_event(method_name, args[0], args[1], block)
       else
         super

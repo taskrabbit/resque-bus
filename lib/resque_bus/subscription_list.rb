@@ -1,15 +1,17 @@
 module ResqueBus
   class SubscriptionList
-    def self.from_redis(redis_hash)
-      out = SubscriptionList.new
-      
-      redis_hash.each do |key, value|
-        sub = Subscription.from_redis(value)
-        out.add(sub) if sub
+
+    class << self
+      def from_redis(redis_hash)
+        out = SubscriptionList.new
+        
+        redis_hash.each do |key, value|
+          sub = Subscription.from_redis(value)
+          out.add(sub) if sub
+        end
       end
-      out
     end
-    
+
     def to_redis
       out = {}
       @subscriptions.values.each do |sub|
