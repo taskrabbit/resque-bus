@@ -40,7 +40,8 @@ def perform_next_job(worker, &block)
 end
 
 def test_sub(event_name, queue="default")
-  ResqueBus::Subscription.new(queue, event_name, {}, nil)
+  matcher = {"bus_event_type" => event_name}
+  ResqueBus::Subscription.new(queue, event_name, matcher, nil)
 end
 
 def test_list(*args)

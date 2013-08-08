@@ -5,11 +5,11 @@ module ResqueBus
   class Rider
     extend Resque::Plugins::ExponentialBackoff
     
-    def self.perform(match, attributes = {})
-      raise "No event type match passed" if match == nil || match == ""
+    def self.perform(key, attributes = {})
+      raise "No subscription key passed" if key == nil || key == ""
       attributes ||= {}
       
-      ResqueBus.log_worker("Rider received: #{match} #{attributes.inspect}")
+      ResqueBus.log_worker("Rider received: #{key} #{attributes.inspect}")
       
       # attributes that should be available
       # attributes["bus_event_type"]
@@ -21,7 +21,7 @@ module ResqueBus
       Resque.redis = ResqueBus.original_redis if ResqueBus.original_redis
       
       # (now running with the real app that subscribed)
-      ResqueBus.dispatcher.execute(match, attributes.merge("bus_executed_at" => Time.now.to_i))
+      ResqueBus.dispatcher.execute(key, attributes.merge("bus_executed_at" => Time.now.to_i))
     ensure
       # put this back if running in the thread
       Resque.redis = ResqueBus.redis if ResqueBus.original_redis

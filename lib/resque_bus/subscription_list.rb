@@ -4,27 +4,16 @@ module ResqueBus
       out = SubscriptionList.new
       
       redis_hash.each do |key, value|
-        if value.is_a? String
-          # old style - just a queue_name
-          pieces = value.split("_")
-          pieces.shift if pieces.size > 1
-          queue = pieces.join("_")
-          event_type = key
-          properties = {}
-          sub = Subscription.new(queue, event_type, properties)
-        else
-          # hash
-          sub = Subscription.from_redis(value)
-        end
-        out.add(sub)
+        sub = Subscription.from_redis(value)
+        out.add(sub) if sub
       end
       out
     end
     
     def to_redis
       out = {}
-      @subscriptions.each do |key, sub|
-        out[key] = sub.to_redis
+      @subscriptions.values.each do |sub|
+        out[sub.key] = sub.to_redis
       end
       out
     end
@@ -49,10 +38,10 @@ module ResqueBus
       @subscriptions.values
     end
     
-    def matches(event_type)
+    def matches(attributes)
       out = []
       all.each do |sub|
-        out << sub if sub.matches?(event_type)
+        out << sub if sub.matches?(attributes)
       end
       out
     end

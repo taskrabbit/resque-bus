@@ -16,21 +16,21 @@ module ResqueBus
     
     describe ".queue_matches" do
       it "return empty array when none" do
-        Driver.queue_matches("else").should == []
-        Driver.queue_matches("event").should == []
+        Driver.queue_matches("bus_event_type" => "else").should == []
+        Driver.queue_matches("bus_event_type" => "event").should == []
       end
       it "should return a match" do
-        Driver.queue_matches("event1").should =~ [["event1", "app1_default"]]
-        Driver.queue_matches("event6").should =~ [["event6", "app3_default"]]
+        Driver.queue_matches("bus_event_type" => "event1").should =~ [["event1", "app1_default"]]
+        Driver.queue_matches("bus_event_type" => "event6").should =~ [["event6", "app3_default"]]
       end
       it "should match multiple apps" do
-        Driver.queue_matches("event2").should =~ [["event2", "app1_default"], ["event2", "app2_other"]]
+        Driver.queue_matches("bus_event_type" => "event2").should =~ [["event2", "app1_default"], ["event2", "app2_other"]]
       end
       it "should match multiple apps with patterns" do
-        Driver.queue_matches("event4").should =~ [["event[45]", "app3_default"], ["event4", "app2_more"]]
+        Driver.queue_matches("bus_event_type" => "event4").should =~ [["event[45]", "app3_default"], ["event4", "app2_more"]]
       end
       it "should match multiple events in same app" do
-        Driver.queue_matches("event5").should =~ [["event[45]", "app3_default"], ["event5", "app3_default"]]
+        Driver.queue_matches("bus_event_type" => "event5").should =~ [["event[45]", "app3_default"], ["event5", "app3_default"]]
       end
     end
     
@@ -45,13 +45,13 @@ module ResqueBus
       end
       
       it "should do nothing when empty" do
-        Driver.perform("else", attributes)
+        Driver.perform(attributes.merge("bus_event_type" => "else"))
         ResqueBus.redis.smembers("queues").should == []
       end
       
       it "should queue up the riders in redis" do
         ResqueBus.redis.lpop("queue:app1_default").should be_nil
-        Driver.perform("event1", attributes)
+        Driver.perform(attributes.merge("bus_event_type" => "event1"))
         ResqueBus.redis.smembers("queues").should =~ ["app1_default"]
 
         hash = JSON.parse(ResqueBus.redis.lpop("queue:app1_default"))
@@ -60,7 +60,7 @@ module ResqueBus
       end
       
       it "should queue up to multiple" do
-        Driver.perform("event4", attributes)
+        Driver.perform(attributes.merge("bus_event_type" => "event4"))
         ResqueBus.redis.smembers("queues").should =~ ["app3_default", "app2_more"]
         
         ResqueBus.redis.lpop("queue:app1_default").should be_nil
@@ -76,7 +76,7 @@ module ResqueBus
       end
       
       it "should queue up to the same" do
-        Driver.perform("event5", attributes)
+        Driver.perform(attributes.merge("bus_event_type" => "event5"))
         ResqueBus.redis.smembers("queues").should =~ ["app3_default"]
         
         ResqueBus.redis.lpop("queue:app1_default").should be_nil

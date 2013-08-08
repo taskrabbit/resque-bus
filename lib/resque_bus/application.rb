@@ -56,9 +56,9 @@ module ResqueBus
       out.uniq
     end
     
-    def subscription_tuples(event_type)
+    def subscription_tuples(attributes)
       out = []
-      subs = subscriptions.matches(event_type)
+      subs = subscriptions.matches(attributes)
       subs.each do |sub|
         out << [sub.key, "#{app_key}_#{sub.queue_name}"]
       end

@@ -4,7 +4,7 @@ module ResqueBus
   describe Rider do
     it "should call execute" do
       ResqueBus.dispatcher.should_receive(:execute)
-      Rider.perform("event_name", { "ok" => true })
+      Rider.perform("ok" => true, "bus_event_type" => "event_name")
     end
     
     it "should change the value" do
@@ -16,7 +16,7 @@ module ResqueBus
         end
       end
       Runner1.value.should == 0
-      Rider.perform("event_name", { "ok" => true })
+      Rider.perform("event_name", {"ok" => true, "bus_event_type" => "event_name"})
       Runner1.value.should == 1
     end
     
@@ -28,7 +28,8 @@ module ResqueBus
         ResqueBus.redis = "localhost:6379"
         
         
-        ResqueBus.enqueue_to("testing", Rider, "event_name", { "ok" => true, "bus_rider_queue" => "testing" })
+        ResqueBus.enqueue_to("testing", Rider, "event_name", 
+                { "bus_event_type" => "event_name", "ok" => true, "bus_rider_queue" => "testing" })
         
         # like the job does
         Resque.redis = ResqueBus.redis

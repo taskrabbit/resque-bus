@@ -2,6 +2,7 @@ require 'redis/namespace'
 require 'resque'
 
 require "resque_bus/version"
+require 'resque_bus/matcher'
 require 'resque_bus/subscription'
 require 'resque_bus/subscription_list'
 require 'resque_bus/application'
@@ -92,7 +93,7 @@ module ResqueBus
   end
   
   def publish_metadata(event_type, attributes={})
-    bus_attr = {"bus_published_at" => Time.now.to_i, "bus_app_key" => application.app_key, "created_at" => Time.now.to_i}
+    bus_attr = {"bus_published_at" => Time.now.to_i, "bus_app_key" => application.app_key, "created_at" => Time.now.to_i, "bus_event_type" => event_type}
     bus_attr["bus_id"] ||= "#{application.app_key}-#{Time.now.to_i}-#{generate_uuid}"
     bus_attr["bus_app_hostname"] = hostname
     bus_attr.merge(attributes || {})
@@ -115,9 +116,9 @@ module ResqueBus
     to_publish = publish_metadata(event_type, attributes)
     ResqueBus.log_application("Event published: #{event_type} #{to_publish.inspect}")
     if local_mode
-      ResqueBus::Local.perform(event_type, to_publish )
+      ResqueBus::Local.perform(to_publish)
     else
-      enqueue_to(incoming_queue, Driver, event_type, to_publish)
+      enqueue_to(incoming_queue, Driver, to_publish)
     end
   end
   
@@ -131,8 +132,8 @@ module ResqueBus
     delayed_push(timestamp_or_epoch, item)
   end
   
-  def enqueue_to(queue, klass, event_type_or_match, attributes)
-    push(queue, :class => klass.to_s, :args => [event_type_or_match, attributes])
+  def enqueue_to(queue, klass, *args)
+    push(queue, :class => klass.to_s, :args => args)
   end
   
   def logger

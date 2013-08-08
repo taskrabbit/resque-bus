@@ -2,14 +2,15 @@ module ResqueBus
   # only process local queues
   class Local
 
-    def self.perform(event_type, attributes = {})
+    def self.perform(attributes = {})
       raise "No event type passed" if event_type == nil || event_type == ""
 
       ResqueBus.log_worker("Local running: #{event_type} #{attributes.inspect}")
 
       # looking for subscriptions, not queues
-      subscription_matches(event_type).each do |sub|
-        bus_attr = {"bus_event_type" => event_type, "bus_driven_at" => Time.now.to_i } # "bus_rider_queue" => queue_name}
+      
+      subscription_matches(attributes).each do |sub|
+        bus_attr = {"bus_driven_at" => Time.now.to_i }
         to_publish = bus_attr.merge(attributes || {})
         if ResqueBus.local_mode == :standalone
           queue_name =  "#{ResqueBus.application.app_key}_#{sub.queue_name}"
@@ -23,8 +24,8 @@ module ResqueBus
 
     # looking directly at subscriptions loaded into dispatcher
     # so we don't need redis server up
-    def self.subscription_matches(event_type)
-      ResqueBus.dispatcher.subscription_matches(event_type)
+    def self.subscription_matches(attributes)
+      ResqueBus.dispatcher.subscription_matches(attributes)
     end
 
   end

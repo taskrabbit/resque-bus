@@ -11,11 +11,11 @@ module ResqueBus
     describe ".register" do
       it "should take in args from dispatcher" do
         executor = Proc.new { |attributes| }
-        sub = Subscription.register("queue_name", "my_event", {}, executor)
+        sub = Subscription.register("queue_name", "mykey", {"bus_event_type" => "my_event"}, executor)
         sub.send(:executor).should == executor
-        sub.event_name.should == "my_event"
+        sub.matcher.filters.should == {"bus_event_type" => "my_event"}
         sub.queue_name.should == "queue_name"
-        sub.key.should == "my_event"
+        sub.key.should == "mykey"
       end
     end
     
@@ -31,20 +31,20 @@ module ResqueBus
     
     describe "#to_redis" do
       it "should return what to store for this subscription" do
-        sub = Subscription.new("queue_one", "my_event", {}, nil)
-        sub.to_redis.should == {"queue_name" => "queue_one", "event_type" => "my_event"}
+        sub = Subscription.new("queue_one", "xyz", {"bus_event_type" => "my_event"}, nil)
+        sub.to_redis.should == {"queue_name" => "queue_one", "key" => "xyz", "matcher" => {"bus_event_type" => "my_event"}}
       end
     end
     
     describe "#matches?" do
       it "should do pattern stuff" do
-        Subscription.new("x", "one", {}).matches?("one").should == true
-        Subscription.new("x", "one", {}).matches?("onex").should == false
-        Subscription.new("x", "^one.*$", {}).matches?("onex").should == true
-        Subscription.new("x", "one.*", {}).matches?("onex").should == true
-        Subscription.new("x", "one.?", {}).matches?("onex").should == true
-        Subscription.new("x", "one.?", {}).matches?("one").should == true
-        Subscription.new("x", "\\", {}).matches?("one").should == false
+        Subscription.new("x", "id", {"bus_event_type" => "one"}).matches?("bus_event_type" => "one").should == true
+        Subscription.new("x", "id", {"bus_event_type" => "one"}).matches?("bus_event_type" => "onex").should == false
+        Subscription.new("x", "id", {"bus_event_type" => "^one.*$"}).matches?("bus_event_type" => "onex").should == true
+        Subscription.new("x", "id", {"bus_event_type" => "one.*"}).matches?("bus_event_type" => "onex").should == true
+        Subscription.new("x", "id", {"bus_event_type" => "one.?"}).matches?("bus_event_type" => "onex").should == true
+        Subscription.new("x", "id", {"bus_event_type" => "one.?"}).matches?("bus_event_type" => "one").should == true
+        Subscription.new("x", "id", {"bus_event_type" => "\\"}).matches?("bus_event_type" => "one").should == false
       end
     end
     

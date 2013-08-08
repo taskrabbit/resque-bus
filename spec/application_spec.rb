@@ -70,7 +70,9 @@ module ResqueBus
         ResqueBus.redis.get("resquebus_app:myapp").should be_nil
         Application.new("myapp").subscribe(test_list(sub1, sub2))
       
-        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {"event_one"=>"{\"queue_name\":\"default\",\"event_type\":\"event_one\"}", "event_two"=>"{\"queue_name\":\"default\",\"event_type\":\"event_two\"}"}
+        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {
+                                            "event_two"=>"{\"queue_name\":\"default\",\"key\":\"event_two\",\"matcher\":{\"bus_event_type\":\"event_two\"}}", 
+                                            "event_one"=>"{\"queue_name\":\"default\",\"key\":\"event_one\",\"matcher\":{\"bus_event_type\":\"event_one\"}}"}
         ResqueBus.redis.hkeys("resquebus_app:myapp").should =~ ["event_one", "event_two"]
         ResqueBus.redis.smembers("resquebus_apps").should =~ ["myapp"]
       end
@@ -78,14 +80,16 @@ module ResqueBus
         ResqueBus.redis.get("resquebus_app:myapp").should be_nil
         Application.new("myapp").subscribe(test_list(sub1))
       
-        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {"event_one" => "{\"queue_name\":\"default\",\"event_type\":\"event_one\"}"}
+        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {"event_one"=>"{\"queue_name\":\"default\",\"key\":\"event_one\",\"matcher\":{\"bus_event_type\":\"event_one\"}}"}
         ResqueBus.redis.hkeys("resquebus_app:myapp").should =~ ["event_one"]
         ResqueBus.redis.smembers("resquebus_apps").should =~ ["myapp"]
       end
       it "should multiple queues to redis" do
         ResqueBus.redis.get("resquebus_app:myapp").should be_nil
         Application.new("myapp").subscribe(test_list(sub1, sub2, sub3))
-        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {"event_one"=>"{\"queue_name\":\"default\",\"event_type\":\"event_one\"}", "event_three"=>"{\"queue_name\":\"other\",\"event_type\":\"event_three\"}", "event_two"=>"{\"queue_name\":\"default\",\"event_type\":\"event_two\"}"}
+        ResqueBus.redis.hgetall("resquebus_app:myapp").should == {
+                                            "event_two"=>"{\"queue_name\":\"default\",\"key\":\"event_two\",\"matcher\":{\"bus_event_type\":\"event_two\"}}", "event_one"=>"{\"queue_name\":\"default\",\"key\":\"event_one\",\"matcher\":{\"bus_event_type\":\"event_one\"}}",
+                                            "event_three"=>"{\"queue_name\":\"other\",\"key\":\"event_three\",\"matcher\":{\"bus_event_type\":\"event_three\"}}"}
         ResqueBus.redis.hkeys("resquebus_app:myapp").should =~ ["event_three", "event_two", "event_one"]
         ResqueBus.redis.smembers("resquebus_apps").should =~ ["myapp"]
       end
@@ -123,35 +127,35 @@ module ResqueBus
     
     describe "#subscription_tuples" do
       it "should return if it is there" do
-        Application.new("myapp").subscription_tuples("three").should == []
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"three").should == []
         
         subs = test_list(test_sub("one_x"), test_sub("one_y"), test_sub("one"), test_sub("two"))
         Application.new("myapp").subscribe(subs)
-        Application.new("myapp").subscription_tuples("three").should == []
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"three").should == []
         
-        Application.new("myapp").subscription_tuples("two").should =~ [["two", "myapp_default"]]
-        Application.new("myapp").subscription_tuples("one").should =~ [["one", "myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"two").should =~ [["two", "myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"one").should =~ [["one", "myapp_default"]]
       end
       
       it "should handle * wildcards" do
         subs = test_list(test_sub("one.+"), test_sub("one"), test_sub("one_.*"), test_sub("two"))
         Application.new("myapp").subscribe(subs)
-        Application.new("myapp").subscription_tuples("three").should == []
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"three").should == []
         
-        Application.new("myapp").subscription_tuples("onex").should =~ [["one.+", "myapp_default"]]
-        Application.new("myapp").subscription_tuples("one").should =~ [["one", "myapp_default"]]
-        Application.new("myapp").subscription_tuples("one_x").should =~ [["one.+","myapp_default"], ["one_.*", "myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"onex").should =~ [["one.+", "myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"one").should =~ [["one", "myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"one_x").should =~ [["one.+","myapp_default"], ["one_.*", "myapp_default"]]
       end
       
       it "should handle actual regular expressions" do
         subs = test_list(test_sub(/one.+/), test_sub("one"), test_sub(/one_.*/), test_sub("two"))
         Application.new("myapp").subscribe(subs)
-        Application.new("myapp").subscription_tuples("three").should == []
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"three").should == []
         
-        Application.new("myapp").subscription_tuples("onex").should =~ [["(?-mix:one.+)", "myapp_default"]]
-        Application.new("myapp").subscription_tuples("donex").should =~ [["(?-mix:one.+)", "myapp_default"]]
-        Application.new("myapp").subscription_tuples("one").should =~ [["one" ,"myapp_default"]]
-        Application.new("myapp").subscription_tuples("one_x").should =~ [["(?-mix:one.+)", "myapp_default"], ["(?-mix:one_.*)", "myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"onex").should =~ [["(?-mix:one.+)", "myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"donex").should =~ [["(?-mix:one.+)", "myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"one").should =~ [["one" ,"myapp_default"]]
+        Application.new("myapp").subscription_tuples("bus_event_type"=>"one_x").should =~ [["(?-mix:one.+)", "myapp_default"], ["(?-mix:one_.*)", "myapp_default"]]
       end
     end
   end

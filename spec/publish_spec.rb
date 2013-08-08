@@ -27,7 +27,7 @@ describe "Publishing an event" do
     val = ResqueBus.redis.lpop("queue:resquebus_incoming")
     hash = JSON.parse(val)
     hash["class"].should == "ResqueBus::Driver"
-    hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1, "id" => 12}.merge(bus_attrs) ]
+    hash["args"].should == [ {"bus_event_type" => event_name, "two"=>"here", "one"=>1, "id" => 12}.merge(bus_attrs) ]
     
   end
   
@@ -43,7 +43,7 @@ describe "Publishing an event" do
     val = ResqueBus.redis.lpop("queue:resquebus_incoming")
     hash = JSON.parse(val)
     hash["class"].should == "ResqueBus::Driver"
-    hash["args"].should == [ "event_name", {"two"=>"here", "one"=>1}.merge(bus_attrs).merge("bus_id" => 'app-given') ]
+    hash["args"].should == [ {"bus_event_type" => event_name, "two"=>"here", "one"=>1}.merge(bus_attrs).merge("bus_id" => 'app-given') ]
   end
 
 end

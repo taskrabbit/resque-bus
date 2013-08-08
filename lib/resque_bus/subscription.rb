@@ -1,39 +1,31 @@
 module ResqueBus
   class Subscription
-    def self.register(queue, event_type, filters, block)
-      Subscription.new(queue, event_type, filters, block)
+    def self.register(queue, key, matcher, block)
+      Subscription.new(queue, key, matcher, block)
     end
     
     def self.from_redis(hash)
-      queue_name = hash["queue_name"]
-      event_type = hash["event_type"]
-      Subscription.new(queue_name, event_type, {}, nil)
+      queue_name = hash["queue_name"].to_s
+      key        = hash["key"].to_s
+      matcher    = hash["matcher"]
+      return nil if key.length == 0 || queue_name.length == 0
+      Subscription.new(queue_name, key, matcher, nil)
     end
     
     def to_redis
       out = {}
       out["queue_name"] = queue_name
-      out["event_type"] = event_type
+      out["key"]        = key
+      out["matcher"]    = matcher.to_redis
       out
     end
 
-    def initialize(queue_name, event_type, properties, executor=nil)
+    attr_reader :matcher, :executor, :queue_name, :key
+    def initialize(queue_name, key, filters, executor=nil)
       @queue_name = self.class.normalize(queue_name)
-      @event_type = event_type.to_s
-      @properties = properties
-      @executor = executor
-    end
-    
-    def queue_name
-      @queue_name
-    end
-    
-    def event_name
-      event_type
-    end
-    
-    def key
-      event_type
+      @key        = key.to_s
+      @matcher    = Matcher.new(filters)
+      @executor   = executor
     end
     
     def execute!(attributes)
@@ -41,22 +33,8 @@ module ResqueBus
       executor.call(attributes)
     end
     
-    def matches?(given)
-      mine = event_type.to_s
-      given = given.to_s
-      return true if mine == given
-      begin
-        # if it's already a regex, don't mess with it
-        # otherwise, it should ahve start and end line situation
-        if mine[0..6] == "(?-mix:"
-          regex = Regexp.new(mine)
-        else
-          regex = Regexp.new("^#{mine}$")
-        end
-        return !!regex.match(given)
-      rescue
-        return false
-      end
+    def matches?(attributes)
+      @matcher.matches?(attributes)
     end
     
     protected
@@ -64,17 +42,5 @@ module ResqueBus
     def self.normalize(val)
       val.to_s.gsub(/\W/, "_").downcase
     end
-    
-    def event_type
-      @event_type
-    end
-
-    def properties
-      @properties
-    end
-    
-    def executor
-      @executor
-    end    
   end
 end

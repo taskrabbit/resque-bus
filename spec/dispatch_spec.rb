@@ -15,15 +15,15 @@ module ResqueBus
       sub.send(:executor).is_a?(Proc).should == true
 
       Runner.value.should == 0
-      dispatch.execute("my_event", {:ok => true})
+      dispatch.execute("my_event", {"bus_event_type" => "my_event", "ok" => true})
       Runner1.value.should == 1
-      Runner1.attributes.should == {:ok => true}
+      Runner1.attributes.should == {"bus_event_type" => "my_event", "ok" => true}
       
     end
     
     it "should not crash if not there" do
       lambda {
-        Dispatch.new.execute("fdkjh", {})
+        Dispatch.new.execute("fdkjh", "bus_event_type" => "fdkjh")
       }.should_not raise_error
     end
     
@@ -54,17 +54,17 @@ module ResqueBus
         ResqueBus.dispatcher.should_not be_nil
         
         Runner2.value.should == 0
-        ResqueBus.dispatcher.execute("event2", {})
+        ResqueBus.dispatcher.execute("event2", "bus_event_type" => "event2")
         Runner2.value.should == 1
-        ResqueBus.dispatcher.execute("event1", {})
+        ResqueBus.dispatcher.execute("event1", "bus_event_type" => "event1")
         Runner2.value.should == 2
-        ResqueBus.dispatcher.execute("event1", {})
+        ResqueBus.dispatcher.execute("event1", "bus_event_type" => "event1")
         Runner2.value.should == 3
       end
       
       it "should return the subscriptions" do
         subs = ResqueBus.dispatcher.subscriptions.all
-        tuples = subs.collect{ |sub| [sub.event_name, sub.queue_name]}
+        tuples = subs.collect{ |sub| [sub.key, sub.queue_name]}
         tuples.should =~ [  ["event1", "default"],
                             ["event2", "default"],
                             ["event3", "high"],
