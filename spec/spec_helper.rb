@@ -60,7 +60,6 @@ RSpec.configure do |config|
   
   config.before(:each) do
     ResqueBus.send(:reset)
-    ResqueBus.app_key = "test"
   end
   config.after(:each) do
     begin

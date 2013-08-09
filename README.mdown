@@ -8,7 +8,6 @@ Application A can publish an event
 
     # config
     ResqueBus.redis = "192.168.1.1:6379"
-    ResqueBus.app_key = "app_a"
 
     # business logic
     ResqueBus.publish("user_created", "id" => 42, "first_name" => "John", "last_name" => "Smith")
@@ -20,10 +19,9 @@ Application B is subscribed to events
 
     # config
     ResqueBus.redis = "192.168.1.1:6379"
-    ResqueBus.app_key = "app_b"
     
     # initializer
-    ResqueBus.dispatch do
+    ResqueBus.dispatch("app_b") do
       # processes event on app_b_default queue
       # subscribe is short-hand to subscribe to your 'default' queue and this block with process events with the name "user_created"
       subscribe "user_created" do |attributes|
@@ -74,20 +72,17 @@ ResqueBus can live along side another instance of Resque that points at a differ
     # config
     Resque.redis = "192.168.1.0:6379"
     ResqueBus.redis = "192.168.1.1:6379"
-    ResqueBus.app_key = "app_a"
 
 If no Redis instance is given specifically, ResqueBus will use the Resque one.
 
     # config
     Resque.redis = "192.168.1.0:6379"
-    ResqueBus.app_key = "app_a"
 
 That will use the default (resque) namespace which can be helpful for using the tooling. Conflict with queue names are unlikely. You can change the namespace if you like though.
 
     # config
     Resque.redis = "192.168.1.0:6379"
     ResqusBus.redis.namespace = :get_on_the_bus
-    ResqueBus.app_key = "app_a"   
 
 
 ### Local Mode

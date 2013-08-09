@@ -11,9 +11,15 @@ namespace :resquebus do
     
     if ENV['QUEUES'].nil?
       # let's not talk to redis in here. Seems to screw things up
-      subscriptions = ResqueBus.dispatcher.subscriptions
-      queues = ResqueBus.application.no_connect_queue_names_for(subscriptions)
-      ENV['QUEUES'] = queues.join(",")
+      queues = []
+      dispatchers = ResqueBus.dispatchers
+      dispatchers.each do |dispatcher|
+        dispatcher.subscriptions.all.each do |sub|
+          queues << sub.queue_name
+        end
+      end
+      
+      ENV['QUEUES'] = queues.uniq.join(",")
     else
       queues = ENV['QUEUES'].split(",")
     end
@@ -34,20 +40,39 @@ namespace :resquebus do
 
   desc "Subscribes this application to ResqueBus events"
   task :subscribe => [ :preload ] do
-    subscriptions = ResqueBus.dispatcher.subscriptions
-    raise "No subscriptions registered" if subscriptions.size == 0
-    app = ResqueBus.application
-    puts "Subscribing #{app.app_key} to #{subscriptions.size} subscriptions."
-    app.subscribe(subscriptions, true)
-    puts "...done"
+    dispatchers = ResqueBus.dispatchers
+    raise "No subscriptions registered" if dispatchers.size == 0
+    
+    count = 0
+    dispatchers.each do |dispatcher|
+      subscriptions = dispatcher.subscriptions
+      if subscriptions.size > 0
+        count += subscriptions.size
+        puts "Subscribing #{dispatcher.app_key} to #{subscriptions.size} subscriptions"
+        app = ResqueBus::Application.new(dispatcher.app_key)
+        app.subscribe(subscriptions, true)
+        puts "  ...done"
+      end
+    end
+
+    raise "No subscriptions created" if count == 0
   end
   
   desc "Unsubscribes this application from ResqueBus events"
   task :unsubscribe => [ :preload ] do
     require 'resque-bus'
-    puts "Unsubcribing from ResqueBus..."
-    ResqueBus.application.unsubscribe
-    puts "...done"
+    
+    dispatchers = ResqueBus.dispatchers
+    count = 0
+    dispatchers.each do |dispatcher|
+      puts "Unsubcribing from #{dispatcher.app_key}"
+      app = ResqueBus::Application.new(dispatcher.app_key)
+      app.unsubscribe
+      count += 1
+      puts "  ...done"
+    end
+    
+    puts "No subscriptions registered" if count == 0
   end
   
   desc "Start the ResqueBus driver.  Use: `rake resquebus:driver resque:work`"
@@ -87,10 +112,8 @@ namespace :resquebus do
     end
     
     desc "Sets up an example config"
-    task :register => [ "resquebus:preload"] do
-      ResqueBus.app_key = "example"
-      
-      ResqueBus.dispatch do
+    task :register => [ "resquebus:preload"] do      
+      ResqueBus.dispatch("example") do
         subscribe "event_one" do
           puts "event1 happened"
         end

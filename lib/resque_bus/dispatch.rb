@@ -1,8 +1,10 @@
 # Creates a DSL for apps to define their blocks to run for event_types
 
 module ResqueBus
-  class Dispatch    
-    def initialize
+  class Dispatch
+    attr_reader :app_key, :subscriptions
+    def initialize(app_key)
+      @app_key = Application.normalize(app_key)
       @subscriptions = SubscriptionList.new
     end
     
@@ -34,10 +36,6 @@ module ResqueBus
       end
     end
 
-    def subscriptions
-      @subscriptions
-    end
-
     def subscription_matches(attributes)
       subscriptions.matches(attributes)
     end
@@ -48,7 +46,7 @@ module ResqueBus
     def register_event(queue, key, matcher_hash, block)
       # if not matcher_hash, assume key is a event_type regex
       matcher_hash ||= { "event_type" => key }
-      sub = Subscription.register(queue, key, matcher_hash, block)
+      sub = Subscription.register("#{app_key}_#{queue}", key, matcher_hash, block)
       subscriptions.add(sub)
     end
   end

@@ -10,8 +10,7 @@ describe "Publishing an event in the future" do
     Timecop.return
   end
   let(:delayed_attrs) { {"bus_delayed_until" => future.to_i,
-                     "bus_id" => "test-#{now.to_i}-idfhlkj",
-                     "bus_app_key" => "test",
+                     "bus_id" => "#{now.to_i}-idfhlkj",
                      "created_at" => now.to_i,
                      "bus_app_hostname" =>  `hostname 2>&1`.strip.sub(/.local/,'')} }
   

@@ -5,11 +5,11 @@ module ResqueBus
   class Rider
     extend Resque::Plugins::ExponentialBackoff
     
-    def self.perform(key, attributes = {})
-      raise "No subscription key passed" if key == nil || key == ""
+    def self.perform(app_key, sub_key, attributes = {})
+      raise "No subscription key passed" if sub_key.to_s == "" || app_key.to_s == ""
       attributes ||= {}
       
-      ResqueBus.log_worker("Rider received: #{key} #{attributes.inspect}")
+      ResqueBus.log_worker("Rider received: #{app_key} #{sub_key} #{attributes.inspect}")
       
       # attributes that should be available
       # attributes["bus_event_type"]
@@ -21,7 +21,7 @@ module ResqueBus
       Resque.redis = ResqueBus.original_redis if ResqueBus.original_redis
       
       # (now running with the real app that subscribed)
-      ResqueBus.dispatcher.execute(key, attributes.merge("bus_executed_at" => Time.now.to_i))
+      ResqueBus.dispatcher_execute(app_key, sub_key, attributes.merge("bus_executed_at" => Time.now.to_i))
     ensure
       # put this back if running in the thread
       Resque.redis = ResqueBus.redis if ResqueBus.original_redis
@@ -36,7 +36,7 @@ module ResqueBus
     def self.on_failure_aaa(exception, *args)
       # note: sorted alphabetically
       # queue needs to be set for rety to work (know what queue in Requeue.class_to_queue)
-      @my_queue = args[1]["bus_rider_queue"]
+      @my_queue = args[2]["bus_rider_queue"]
     end
     
     def self.on_failure_zzz(exception, *args)

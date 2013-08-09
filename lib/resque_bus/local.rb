@@ -13,7 +13,7 @@ module ResqueBus
         bus_attr = {"bus_driven_at" => Time.now.to_i }
         to_publish = bus_attr.merge(attributes || {})
         if ResqueBus.local_mode == :standalone
-          queue_name =  "#{ResqueBus.application.app_key}_#{sub.queue_name}"
+          queue_name = sub.queue_name
           ResqueBus.enqueue_to(queue_name, Rider, sub.key, to_publish)
         # defaults to inline mode
         else ResqueBus.local_mode == :inline
@@ -25,7 +25,11 @@ module ResqueBus
     # looking directly at subscriptions loaded into dispatcher
     # so we don't need redis server up
     def self.subscription_matches(attributes)
-      ResqueBus.dispatcher.subscription_matches(attributes)
+      out = []
+      ResqueBus.dispatchers.each do |dispatcher|
+        out.concat(subscription_matches(attributes))
+      end
+      out
     end
 
   end

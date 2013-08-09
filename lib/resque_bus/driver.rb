@@ -17,11 +17,11 @@ module ResqueBus
       ResqueBus.log_worker("Driver running: #{attributes.inspect}")
 
       queue_matches(attributes).each do |tuple|
-        key, queue_name = tuple
-        ResqueBus.log_worker("  ...sending to #{queue_name} queue because of subscription: #{key}")
+        app_key, sub_key, queue_name = tuple
+        ResqueBus.log_worker("  ...sending to #{queue_name} queue for app #{app_key} because of subscription: #{sub_key}")
         
         bus_attr = {"bus_driven_at" => Time.now.to_i, "bus_rider_queue" => queue_name}
-        ResqueBus.enqueue_to(queue_name, Rider, key, bus_attr.merge(attributes || {}))
+        ResqueBus.enqueue_to(queue_name, Rider, app_key, sub_key, bus_attr.merge(attributes || {}))
       end
     end
 
