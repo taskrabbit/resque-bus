@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
   # specify any dependencies here; for example:
   # s.add_development_dependency "rspec"
   # s.add_runtime_dependency "rest-client"
-  s.add_dependency('resque', '>= 1.10.0')
+  s.add_dependency('resque', ['>= 1.10.0', '< 2.0'])
   s.add_dependency('resque-scheduler', '>= 2.0.1')
   s.add_dependency('resque-retry')
   s.add_dependency("redis-namespace")
