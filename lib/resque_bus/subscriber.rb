@@ -6,6 +6,7 @@ module ResqueBus
     end
     
     module ClassMethods
+
       def application(app_key)
         @app_key = ::ResqueBus::Application.normalize(app_key)
       end
@@ -22,6 +23,7 @@ module ResqueBus
       def subscribe(method_name, matcher_hash = nil)
         queue_name   = ::Resque.queue_from_class(self)
         queue_name ||= ::ResqueBus.default_queue
+        queue_name ||= "#{app_key}_default"
         subscribe_queue(queue_name, method_name, matcher_hash)
       end
       

@@ -77,16 +77,16 @@ module ResqueBus
       all.size.should == 1
 
       sub = all.first
-      sub.queue_name.should == "default"
+      sub.queue_name.should == "test2_default"
       sub.class_name.should == "SubscriberTest2"
       sub.key.should == "SubscriberTest2.test2"
       sub.matcher.filters.should == {"value"=>"bus_special_value_present"}
 
       Driver.perform(attributes.merge("bus_event_type" => "something2", "value"=>"nice"))
 
-      hash = JSON.parse(ResqueBus.redis.lpop("queue:default"))
+      hash = JSON.parse(ResqueBus.redis.lpop("queue:test2_default"))
       hash["class"].should == "SubscriberTest2"
-      hash["args"].should == [ {"bus_rider_app_key"=>"test2", "bus_rider_sub_key"=>"SubscriberTest2.test2", "bus_rider_queue" => "default", "bus_rider_class_name"=>"SubscriberTest2",
+      hash["args"].should == [ {"bus_rider_app_key"=>"test2", "bus_rider_sub_key"=>"SubscriberTest2.test2", "bus_rider_queue" => "test2_default", "bus_rider_class_name"=>"SubscriberTest2",
                                "bus_event_type" => "something2", "value"=>"nice", "x"=>"y"}.merge(bus_attrs) ]
                                
       Runner1.value.should == 0
@@ -100,9 +100,9 @@ module ResqueBus
       
       Driver.perform(attributes.merge("bus_event_type" => "something2", "value"=>"12"))
       
-      hash = JSON.parse(ResqueBus.redis.lpop("queue:default"))
+      hash = JSON.parse(ResqueBus.redis.lpop("queue:test2_default"))
       hash["class"].should == "SubscriberTest2"
-      hash["args"].should == [ {"bus_rider_app_key"=>"test2", "bus_rider_sub_key"=>"SubscriberTest2.test2", "bus_rider_queue" => "default", "bus_rider_class_name"=>"SubscriberTest2",
+      hash["args"].should == [ {"bus_rider_app_key"=>"test2", "bus_rider_sub_key"=>"SubscriberTest2.test2", "bus_rider_queue" => "test2_default", "bus_rider_class_name"=>"SubscriberTest2",
                                "bus_event_type" => "something2", "value"=>"12", "x"=>"y"}.merge(bus_attrs) ]
                                
       Runner1.value.should == 1
@@ -133,7 +133,7 @@ module ResqueBus
       sub.matcher.filters.should == {"bus_event_type"=>"the_event"}
       
       sub = all.select{ |s| s.key == "SubModule::SubscriberTest3.other"}.first
-      sub.queue_name.should == "default"
+      sub.queue_name.should == "sub_module_default"
       sub.class_name.should == "SubModule::SubscriberTest3"
       sub.key.should == "SubModule::SubscriberTest3.other"
       sub.matcher.filters.should == {"bus_event_type"=>"other_event"}

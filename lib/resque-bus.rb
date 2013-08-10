@@ -31,7 +31,7 @@ module ResqueBus
   end
   
   def default_queue
-    @default_queue ||= "default"
+    @default_queue
   end
 
   def hostname

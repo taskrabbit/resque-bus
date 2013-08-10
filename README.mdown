@@ -34,12 +34,7 @@ Application B is subscribed to events
         CreditCard.charge!(attributes)
       end
 
-      # you can pass any queue name you would like to process from as well IE: `bannana "peeled" do |attributes|`
-      
-      # you can leave the attributes off if you like
-      subscribe "user_homepage_visit" do
-        GoogleAnalytics.increment!("homepage")
-      end
+      # you can pass any queue name you would like to process from as well IE: `banana "peeled" do |attributes|`
       
       # and regexes work as well. note that with the above configuration along with this regex,
       # the following as well as the corresponding block above would both be executed
@@ -47,11 +42,54 @@ Application B is subscribed to events
         Metrics.record_user_action(attributes["bus_event_type"], attributes["id"])
       end
       
-      # however, this would overwrite the relevant block above
-      subscribe "user_homepage_visit" do
-        Mixpanel.increment!("homepage")
+      # the above all filter on just the event_type, but you can filter on anything
+      # this would be _any_ event that has a user_id and the page value of homepage regardless of bus_event_type
+      subscribe "my_key", { "user_id" => :present, "page" => "homepage"} do
+        Mixpanel.homepage_action!(attributes["action"])
       end
     end
+
+Applications can also subscribe within classes using the provided `Subscriber` module. 
+
+class SimpleSubscriber
+  include ResqueBus::Subscriber
+  subscribe :my_method
+  
+  def my_method(attributes)
+    # heavy lifting
+  end
+end
+
+The following is equivalent to the original initializer and shows more options:
+
+  class OtherSubscriber
+    include ResqueBus::Subscriber
+    application :app_b
+  
+    subscribe :user_created
+    subscribe_queue :app_b_critical, :user_paid
+    subscribe_queue :app_b_default, :user_action, :bus_event_type => /^user_/
+    subscribe :homepage_method, :user_id => :present, :page => "homepage"
+  
+    def user_created(attributes)
+      NameCount.find_or_create_by_name(attributes["last_name"]).increment!
+    end
+  
+    def user_paid(attributes)
+      CreditCard.charge!(attributes)
+    end
+  
+    def user_action(attributes)
+      Metrics.record_user_action(attributes["bus_event_type"], attributes["id"])
+    end
+  
+    def homepage_method
+      Mixpanel.homepage_action!(attributes["action"])
+    end
+  end
+
+
+
 
 The subscription block is run inside a Resque worker which needs to be started for each app.
 
