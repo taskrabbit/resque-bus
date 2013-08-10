@@ -2,34 +2,57 @@ require 'redis/namespace'
 require 'resque'
 
 require "resque_bus/version"
+require 'resque_bus/util'
 require 'resque_bus/matcher'
 require 'resque_bus/subscription'
 require 'resque_bus/subscription_list'
+require 'resque_bus/subscriber'
 require 'resque_bus/application'
 require 'resque_bus/publisher'
 require 'resque_bus/driver'
 require 'resque_bus/local'
 require 'resque_bus/rider'
 require 'resque_bus/dispatch'
+require 'resque_bus/task_manager'
 
 module ResqueBus
   extend self
+  
+  def default_app_key=val
+    @default_app_key = Application.normalize(val)
+  end
+  
+  def default_app_key
+    @default_app_key
+  end
+  
+  def default_queue=val
+    @default_queue = val
+  end
+  
+  def default_queue
+    @default_queue ||= "default"
+  end
 
   def hostname
     @hostname ||= `hostname 2>&1`.strip.sub(/.local/,'')
   end
   
-  def dispatch(app_key, &block)
-    app_key = Application.normalize(app_key)
-    @dispatchers ||= {}
-    @dispatchers[app_key] ||= Dispatch.new(app_key)
-    @dispatchers[app_key].instance_eval(&block)
-    @dispatchers[app_key]
+  def dispatch(app_key=nil, &block)
+    dispatcher = dispatcher_by_key(app_key)
+    dispatcher.instance_eval(&block)
+    dispatcher
   end
   
   def dispatchers
     @dispatchers ||= {}
     @dispatchers.values
+  end
+  
+  def dispatcher_by_key(app_key)
+    app_key = Application.normalize(app_key || default_app_key)
+    @dispatchers ||= {}
+    @dispatchers[app_key] ||= Dispatch.new(app_key)
   end
   
   def dispatcher_execute(app_key, key, attributes)
@@ -164,6 +187,8 @@ module ResqueBus
     # used by tests
     @redis = nil # clear instance of redis
     @dispatcher = nil
+    @default_app_key = nil
+    @default_queue = nil
   end
   
   def incoming_queue

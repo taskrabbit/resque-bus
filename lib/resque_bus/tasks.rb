@@ -3,23 +3,15 @@
 
 
 require "resque/tasks"
-
 namespace :resquebus do
 
   desc "Setup will configure a resque task to run before resque:work"
   task :setup => [ :preload ] do
     
     if ENV['QUEUES'].nil?
-      # let's not talk to redis in here. Seems to screw things up
-      queues = []
-      dispatchers = ResqueBus.dispatchers
-      dispatchers.each do |dispatcher|
-        dispatcher.subscriptions.all.each do |sub|
-          queues << sub.queue_name
-        end
-      end
-      
-      ENV['QUEUES'] = queues.uniq.join(",")
+      manager = ::ResqueBus::TaskManager.new(true)
+      queues = manager.queue_names.join(",")
+      ENV['QUEUES'] = queues.join(",")
     else
       queues = ENV['QUEUES'].split(",")
     end
@@ -40,39 +32,17 @@ namespace :resquebus do
 
   desc "Subscribes this application to ResqueBus events"
   task :subscribe => [ :preload ] do
-    dispatchers = ResqueBus.dispatchers
-    raise "No subscriptions registered" if dispatchers.size == 0
-    
-    count = 0
-    dispatchers.each do |dispatcher|
-      subscriptions = dispatcher.subscriptions
-      if subscriptions.size > 0
-        count += subscriptions.size
-        puts "Subscribing #{dispatcher.app_key} to #{subscriptions.size} subscriptions"
-        app = ResqueBus::Application.new(dispatcher.app_key)
-        app.subscribe(subscriptions, true)
-        puts "  ...done"
-      end
-    end
-
+    manager = ::ResqueBus::TaskManager.new(true)
+    count = manager.subscribe!
     raise "No subscriptions created" if count == 0
   end
   
   desc "Unsubscribes this application from ResqueBus events"
   task :unsubscribe => [ :preload ] do
     require 'resque-bus'
-    
-    dispatchers = ResqueBus.dispatchers
-    count = 0
-    dispatchers.each do |dispatcher|
-      puts "Unsubcribing from #{dispatcher.app_key}"
-      app = ResqueBus::Application.new(dispatcher.app_key)
-      app.unsubscribe
-      count += 1
-      puts "  ...done"
-    end
-    
-    puts "No subscriptions registered" if count == 0
+    manager = ::ResqueBus::TaskManager.new(true)
+    count = manager.unsubscribe!
+    puts "No subscriptions unsubscribed" if count == 0
   end
   
   desc "Start the ResqueBus driver.  Use: `rake resquebus:driver resque:work`"

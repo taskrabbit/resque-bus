@@ -5,8 +5,12 @@ module ResqueBus
   class Rider
     extend Resque::Plugins::ExponentialBackoff
     
-    def self.perform(app_key, sub_key, attributes = {})
-      raise "No subscription key passed" if sub_key.to_s == "" || app_key.to_s == ""
+    def self.perform(attributes = {})
+      sub_key = attributes["bus_rider_sub_key"]
+      app_key = attributes["bus_rider_app_key"]
+      raise "No application key passed" if app_key.to_s == ""
+      raise "No subcription key passed" if sub_key.to_s == ""
+      
       attributes ||= {}
       
       ResqueBus.log_worker("Rider received: #{app_key} #{sub_key} #{attributes.inspect}")
@@ -36,7 +40,7 @@ module ResqueBus
     def self.on_failure_aaa(exception, *args)
       # note: sorted alphabetically
       # queue needs to be set for rety to work (know what queue in Requeue.class_to_queue)
-      @my_queue = args[2]["bus_rider_queue"]
+      @my_queue = args[0]["bus_rider_queue"]
     end
     
     def self.on_failure_zzz(exception, *args)

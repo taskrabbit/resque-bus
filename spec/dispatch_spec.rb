@@ -59,10 +59,7 @@ module ResqueBus
       end
       
       it "should return the subscriptions" do
-        dispatcher = nil
-        ResqueBus.dispatchers.each do |d|
-          dispatcher = d if d.app_key == "testit"
-        end
+        dispatcher = ResqueBus.dispatcher_by_key("testit")
         subs = dispatcher.subscriptions.all
         tuples = subs.collect{ |sub| [sub.key, sub.queue_name]}
         tuples.should =~ [  ["event1", "testit_default"],

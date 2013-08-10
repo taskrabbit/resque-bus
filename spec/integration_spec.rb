@@ -3,8 +3,8 @@ require 'spec_helper'
 module ResqueBus
   describe "Integration" do
     it "should round trip attributes" do      
-      write1 = Subscription.new("default", "key1", {"bus_event_type" => "event_one"})
-      write2 = Subscription.new("else_ok", "key2", {"bus_event_type" => /^[ab]here/})  #regex
+      write1 = Subscription.new("default", "key1", "MyClass1", {"bus_event_type" => "event_one"})
+      write2 = Subscription.new("else_ok", "key2", "MyClass2", {"bus_event_type" => /^[ab]here/})  #regex
     
       write1.matches?("bus_event_type" => "event_one").should  == true
       write1.matches?("bus_event_type" => "event_one1").should == false
@@ -34,7 +34,9 @@ module ResqueBus
       read2.should_not be_nil
       
       read1.queue_name.should == "default"
+      read1.class_name.should == "MyClass1"
       read2.queue_name.should == "else_ok"
+      read2.class_name.should == "MyClass2"
       
       read1.matches?("bus_event_type" => "event_one").should  == true
       read1.matches?("bus_event_type" => "event_one1").should == false
