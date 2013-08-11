@@ -51,44 +51,42 @@ Application B is subscribed to events
 
 Applications can also subscribe within classes using the provided `Subscriber` module. 
 
-class SimpleSubscriber
-  include ResqueBus::Subscriber
-  subscribe :my_method
+    class SimpleSubscriber
+      include ResqueBus::Subscriber
+      subscribe :my_method
   
-  def my_method(attributes)
-    # heavy lifting
-  end
-end
+      def my_method(attributes)
+        # heavy lifting
+      end
+    end
 
 The following is equivalent to the original initializer and shows more options:
 
-  class OtherSubscriber
-    include ResqueBus::Subscriber
-    application :app_b
-  
-    subscribe :user_created
-    subscribe_queue :app_b_critical, :user_paid
-    subscribe_queue :app_b_default, :user_action, :bus_event_type => /^user_/
-    subscribe :homepage_method, :user_id => :present, :page => "homepage"
-  
-    def user_created(attributes)
-      NameCount.find_or_create_by_name(attributes["last_name"]).increment!
-    end
-  
-    def user_paid(attributes)
-      CreditCard.charge!(attributes)
-    end
-  
-    def user_action(attributes)
-      Metrics.record_user_action(attributes["bus_event_type"], attributes["id"])
-    end
-  
-    def homepage_method
-      Mixpanel.homepage_action!(attributes["action"])
-    end
-  end
+    class OtherSubscriber
+      include ResqueBus::Subscriber
+      application :app_b
 
+      subscribe :user_created
+      subscribe_queue :app_b_critical, :user_paid
+      subscribe_queue :app_b_default, :user_action, :bus_event_type => /^user_/
+      subscribe :homepage_method, :user_id => :present, :page => "homepage"
 
+      def user_created(attributes)
+        NameCount.find_or_create_by_name(attributes["last_name"]).increment!
+      end
+
+      def user_paid(attributes)
+        CreditCard.charge!(attributes)
+      end
+
+      def user_action(attributes)
+        Metrics.record_user_action(attributes["bus_event_type"], attributes["id"])
+      end
+
+      def homepage_method
+        Mixpanel.homepage_action!(attributes["action"])
+      end
+    end
 
 
 The subscription block is run inside a Resque worker which needs to be started for each app.
