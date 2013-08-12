@@ -1,8 +1,10 @@
 # Creates a DSL for apps to define their blocks to run for event_types
 
 module ResqueBus
-  class Dispatch    
-    def initialize
+  class Dispatch
+    attr_reader :app_key, :subscriptions
+    def initialize(app_key)
+      @app_key = Application.normalize(app_key)
       @subscriptions = SubscriptionList.new
     end
     
@@ -11,15 +13,15 @@ module ResqueBus
     end
     
     def subscribe(key, matcher_hash = nil, &block)
-      register_event("default", key, matcher_hash, block)
+      dispatch_event("default", key, matcher_hash, block)
     end
     
     # allows definitions of other queues
     def method_missing(method_name, *args, &block)
       if args.size == 1 and block
-        register_event(method_name, args[0], nil, block)
+        dispatch_event(method_name, args[0], nil, block)
       elsif args.size == 2 and block
-        register_event(method_name, args[0], args[1], block)
+        dispatch_event(method_name, args[0], args[1], block)
       else
         super
       end
@@ -34,22 +36,24 @@ module ResqueBus
       end
     end
 
-    def subscriptions
-      @subscriptions
-    end
-
     def subscription_matches(attributes)
-      subscriptions.matches(attributes)
+      out = subscriptions.matches(attributes)
+      out.each do |sub|
+        sub.app_key = self.app_key
+      end
+      out
     end
     
-    protected
-    
-    
-    def register_event(queue, key, matcher_hash, block)
+    def dispatch_event(queue, key, matcher_hash, block)
       # if not matcher_hash, assume key is a event_type regex
-      matcher_hash ||= { "event_type" => key }
-      sub = Subscription.register(queue, key, matcher_hash, block)
+      matcher_hash ||= { "bus_event_type" => key }
+      add_subscription("#{app_key}_#{queue}", key, "::ResqueBus::Rider", matcher_hash, block)
+    end
+    
+    def add_subscription(queue_name, key, class_name, matcher_hash = nil, block)
+      sub = Subscription.register(queue_name, key, class_name, matcher_hash, block)
       subscriptions.add(sub)
+      sub
     end
   end
 end

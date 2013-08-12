@@ -3,16 +3,14 @@
 
 
 require "resque/tasks"
-
 namespace :resquebus do
 
   desc "Setup will configure a resque task to run before resque:work"
   task :setup => [ :preload ] do
     
     if ENV['QUEUES'].nil?
-      # let's not talk to redis in here. Seems to screw things up
-      subscriptions = ResqueBus.dispatcher.subscriptions
-      queues = ResqueBus.application.no_connect_queue_names_for(subscriptions)
+      manager = ::ResqueBus::TaskManager.new(true)
+      queues = manager.queue_names
       ENV['QUEUES'] = queues.join(",")
     else
       queues = ENV['QUEUES'].split(",")
@@ -23,38 +21,26 @@ namespace :resquebus do
     else
       puts "  >>  Working Queues: #{queues.join(", ")}"
     end
-    
-    app_fork = Resque.after_fork
-    Resque.after_fork = Proc.new {
-      # puts "reconnecting to Resque Bus' Redis"
-      ResqueBus.redis.client.reconnect
-      app_fork.call if app_fork
-    }
   end
 
   desc "Subscribes this application to ResqueBus events"
   task :subscribe => [ :preload ] do
-    subscriptions = ResqueBus.dispatcher.subscriptions
-    raise "No subscriptions registered" if subscriptions.size == 0
-    app = ResqueBus.application
-    puts "Subscribing #{app.app_key} to #{subscriptions.size} subscriptions."
-    app.subscribe(subscriptions, true)
-    puts "...done"
+    manager = ::ResqueBus::TaskManager.new(true)
+    count = manager.subscribe!
+    raise "No subscriptions created" if count == 0
   end
   
   desc "Unsubscribes this application from ResqueBus events"
   task :unsubscribe => [ :preload ] do
     require 'resque-bus'
-    puts "Unsubcribing from ResqueBus..."
-    ResqueBus.application.unsubscribe
-    puts "...done"
+    manager = ::ResqueBus::TaskManager.new(true)
+    count = manager.unsubscribe!
+    puts "No subscriptions unsubscribed" if count == 0
   end
   
-  desc "Start the ResqueBus driver.  Use: `rake resquebus:driver resque:work`"
+  desc "Sets the queue to work the driver  Use: `rake resquebus:driver resque:work`"
   task :driver => [ :preload ] do
-    # resquebus_work_queues(["resquebus_incoming"])
     ENV['QUEUES'] = "resquebus_incoming"
-    Rake::Task["resquebus:setup"].invoke
   end
 
   # Preload app files if this is Rails
@@ -87,10 +73,8 @@ namespace :resquebus do
     end
     
     desc "Sets up an example config"
-    task :register => [ "resquebus:preload"] do
-      ResqueBus.app_key = "example"
-      
-      ResqueBus.dispatch do
+    task :register => [ "resquebus:preload"] do      
+      ResqueBus.dispatch("example") do
         subscribe "event_one" do
           puts "event1 happened"
         end

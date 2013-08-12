@@ -41,7 +41,7 @@ module ResqueBus
     end
         
     def unsubscribe
-      # TODO: clean up known queues
+      # TODO: clean up known queues?
       ResqueBus.redis.srem(self.class.app_list_key, app_key)
       ResqueBus.redis.del(redis_key)
     end
@@ -56,11 +56,10 @@ module ResqueBus
       out.uniq
     end
     
-    def subscription_tuples(attributes)
-      out = []
-      subs = subscriptions.matches(attributes)
-      subs.each do |sub|
-        out << [sub.key, "#{app_key}_#{sub.queue_name}"]
+    def subscription_matches(attributes)
+      out = subscriptions.matches(attributes)
+      out.each do |sub|
+        sub.app_key = self.app_key
       end
       out
     end
@@ -68,7 +67,7 @@ module ResqueBus
     def event_display_tuples
       out = []
       subscriptions.all.each do |sub|
-        out << [sub.event_name, "#{app_key}_#{sub.queue_name}"]
+        out << [sub.event_name, sub.queue_name]
       end
       out
     end
