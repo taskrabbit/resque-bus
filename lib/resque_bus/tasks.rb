@@ -10,7 +10,7 @@ namespace :resquebus do
     
     if ENV['QUEUES'].nil?
       manager = ::ResqueBus::TaskManager.new(true)
-      queues = manager.queue_names.join(",")
+      queues = manager.queue_names
       ENV['QUEUES'] = queues.join(",")
     else
       queues = ENV['QUEUES'].split(",")
@@ -21,13 +21,6 @@ namespace :resquebus do
     else
       puts "  >>  Working Queues: #{queues.join(", ")}"
     end
-    
-    app_fork = Resque.after_fork
-    Resque.after_fork = Proc.new {
-      # puts "reconnecting to Resque Bus' Redis"
-      ResqueBus.redis.client.reconnect
-      app_fork.call if app_fork
-    }
   end
 
   desc "Subscribes this application to ResqueBus events"
@@ -45,11 +38,9 @@ namespace :resquebus do
     puts "No subscriptions unsubscribed" if count == 0
   end
   
-  desc "Start the ResqueBus driver.  Use: `rake resquebus:driver resque:work`"
+  desc "Sets the queue to work the driver  Use: `rake resquebus:driver resque:work`"
   task :driver => [ :preload ] do
-    # resquebus_work_queues(["resquebus_incoming"])
     ENV['QUEUES'] = "resquebus_incoming"
-    Rake::Task["resquebus:setup"].invoke
   end
 
   # Preload app files if this is Rails

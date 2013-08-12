@@ -46,7 +46,7 @@ module ResqueBus
     
     def dispatch_event(queue, key, matcher_hash, block)
       # if not matcher_hash, assume key is a event_type regex
-      matcher_hash ||= { "event_type" => key }
+      matcher_hash ||= { "bus_event_type" => key }
       add_subscription("#{app_key}_#{queue}", key, "::ResqueBus::Rider", matcher_hash, block)
     end
     

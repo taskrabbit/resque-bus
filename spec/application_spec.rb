@@ -46,11 +46,11 @@ module ResqueBus
     describe "#read_redis_hash" do
       it "should handle old and new values" do
         
-        ResqueBus.redis.hset("resquebus_app:myapp", "new_one", Resque.encode("queue_name" => "x", "event_type" => "event_name"))
+        ResqueBus.redis.hset("resquebus_app:myapp", "new_one", Resque.encode("queue_name" => "x", "bus_event_type" => "event_name"))
         ResqueBus.redis.hset("resquebus_app:myapp", "old_one", "oldqueue_name")
         app = Application.new("myapp")
         val = app.send(:read_redis_hash)
-        val.should == {"new_one" => {"queue_name" => "x", "event_type" => "event_name"}, "old_one" => "oldqueue_name"}
+        val.should == {"new_one" => {"queue_name" => "x", "bus_event_type" => "event_name"}, "old_one" => "oldqueue_name"}
       end
     end
   
