@@ -2,41 +2,63 @@ require 'redis/namespace'
 require 'resque'
 
 require "resque_bus/version"
+require 'resque_bus/util'
 require 'resque_bus/matcher'
 require 'resque_bus/subscription'
 require 'resque_bus/subscription_list'
+require 'resque_bus/subscriber'
 require 'resque_bus/application'
 require 'resque_bus/publisher'
 require 'resque_bus/driver'
 require 'resque_bus/local'
 require 'resque_bus/rider'
 require 'resque_bus/dispatch'
+require 'resque_bus/task_manager'
 
 module ResqueBus
   extend self
+  
+  def default_app_key=val
+    @default_app_key = Application.normalize(val)
+  end
+  
+  def default_app_key
+    @default_app_key
+  end
+  
+  def default_queue=val
+    @default_queue = val
+  end
+  
+  def default_queue
+    @default_queue
+  end
 
-  def app_key=key
-    @application = Application.new(key)
-  end
-  def application
-    raise "Set application with ResqueBus.app_key='appname'" unless @application
-    @application
-  end
-  def app_key
-    application.app_key
-  end
   def hostname
     @hostname ||= `hostname 2>&1`.strip.sub(/.local/,'')
   end
   
-  def dispatch(&block)
-    @dispatcher ||= Dispatch.new
-    @dispatcher.instance_eval(&block)
-    @dispatcher
+  def dispatch(app_key=nil, &block)
+    dispatcher = dispatcher_by_key(app_key)
+    dispatcher.instance_eval(&block)
+    dispatcher
   end
   
-  def dispatcher
-    @dispatcher ||= Dispatch.new
+  def dispatchers
+    @dispatchers ||= {}
+    @dispatchers.values
+  end
+  
+  def dispatcher_by_key(app_key)
+    app_key = Application.normalize(app_key || default_app_key)
+    @dispatchers ||= {}
+    @dispatchers[app_key] ||= Dispatch.new(app_key)
+  end
+  
+  def dispatcher_execute(app_key, key, attributes)
+    @dispatchers ||= {}
+    dispatcher = @dispatchers[app_key]
+    dispatcher.execute(key, attributes) if dispatcher
   end
 
   def local_mode=value
@@ -93,8 +115,9 @@ module ResqueBus
   end
   
   def publish_metadata(event_type, attributes={})
-    bus_attr = {"bus_published_at" => Time.now.to_i, "bus_app_key" => application.app_key, "created_at" => Time.now.to_i, "bus_event_type" => event_type}
-    bus_attr["bus_id"] ||= "#{application.app_key}-#{Time.now.to_i}-#{generate_uuid}"
+    # TODO: "bus_app_key" => application.app_key ?
+    bus_attr = {"bus_published_at" => Time.now.to_i, "created_at" => Time.now.to_i, "bus_event_type" => event_type}
+    bus_attr["bus_id"] ||= "#{Time.now.to_i}-#{generate_uuid}"
     bus_attr["bus_app_hostname"] = hostname
     bus_attr.merge(attributes || {})
   end
@@ -163,8 +186,9 @@ module ResqueBus
   def reset
     # used by tests
     @redis = nil # clear instance of redis
-    @application = nil
     @dispatcher = nil
+    @default_app_key = nil
+    @default_queue = nil
   end
   
   def incoming_queue
