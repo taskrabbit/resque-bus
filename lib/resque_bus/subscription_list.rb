@@ -9,6 +9,8 @@ module ResqueBus
           sub = Subscription.from_redis(value)
           out.add(sub) if sub
         end
+
+        out
       end
     end
 

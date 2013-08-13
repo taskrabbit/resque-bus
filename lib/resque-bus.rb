@@ -7,13 +7,17 @@ require 'resque'
 module ResqueBus
   
   autoload :Application,      'resque_bus/application'
-  autoload :Subscription,     'resque_bus/subscription'
-  autoload :SubscriptionList, 'resque_bus/subscription_list'
-  autoload :Publisher,        'resque_bus/publisher'
+  autoload :Dispatch,         'resque_bus/dispatch'
   autoload :Driver,           'resque_bus/driver'
   autoload :Local,            'resque_bus/local'
+  autoload :Matcher,          'resque_bus/matcher'
+  autoload :Publisher,        'resque_bus/publisher'
   autoload :Rider,            'resque_bus/rider'
-  autoload :Dispatch,         'resque_bus/dispatch'
+  autoload :Subscriber,       'resque_bus/subscriber'
+  autoload :Subscription,     'resque_bus/subscription'
+  autoload :SubscriptionList, 'resque_bus/subscription_list'
+  autoload :TaskManager,      'resque_bus/task_manager'
+  autoload :Util,             'resque_bus/util'
 
   class << self
     

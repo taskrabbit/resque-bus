@@ -15,8 +15,6 @@ module ResqueBus
         Subscription.new(queue_name, key, class_name, matcher, nil)
       end
 
-      protected
-
       def normalize(val)
         val.to_s.gsub(/\W/, "_").downcase
       end
