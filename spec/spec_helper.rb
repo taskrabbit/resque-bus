@@ -1,8 +1,6 @@
-require 'rubygems'
-require 'bundler/setup'
 require 'timecop'
-
 require 'resque-bus'
+require 'resque/scheduler'
 
 module ResqueBus
   class Runner

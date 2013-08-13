@@ -1,6 +1,8 @@
 module ResqueBus
   class TaskManager
+
     attr_reader :logging
+    
     def initialize(logging)
       @logging = logging
     end
