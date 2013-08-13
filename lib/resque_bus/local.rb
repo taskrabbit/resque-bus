@@ -3,18 +3,14 @@ module ResqueBus
   class Local
 
     def self.perform(attributes = {})
-      raise "No event type passed" if event_type == nil || event_type == ""
-
-      ResqueBus.log_worker("Local running: #{event_type} #{attributes.inspect}")
+      ResqueBus.log_worker("Local running: #{attributes.inspect}")
 
       # looking for subscriptions, not queues
-      
       subscription_matches(attributes).each do |sub|
-        bus_attr = {"bus_driven_at" => Time.now.to_i }
+         bus_attr = {"bus_driven_at" => Time.now.to_i, "bus_rider_queue" => sub.queue_name, "bus_rider_app_key" => sub.app_key, "bus_rider_sub_key" => sub.key, "bus_rider_class_name" => sub.class_name}
         to_publish = bus_attr.merge(attributes || {})
         if ResqueBus.local_mode == :standalone
-          queue_name = sub.queue_name
-          ResqueBus.enqueue_to(queue_name, Rider, sub.key, to_publish)
+          ResqueBus.enqueue_to(sub.queue_name, sub.class_name, bus_attr.merge(attributes || {}))
         # defaults to inline mode
         else ResqueBus.local_mode == :inline
           sub.execute!(to_publish)
@@ -27,7 +23,7 @@ module ResqueBus
     def self.subscription_matches(attributes)
       out = []
       ResqueBus.dispatchers.each do |dispatcher|
-        out.concat(subscription_matches(attributes))
+        out.concat(dispatcher.subscription_matches(attributes))
       end
       out
     end
