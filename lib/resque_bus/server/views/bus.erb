@@ -14,6 +14,7 @@ else
 
 <%
   app_hash = {}
+  class_hash = {}
   event_hash = {}
   
   # collect each differently
@@ -22,16 +23,25 @@ else
     
     app_hash[app_key] ||= []
     app.event_display_tuples.each do |tuple|
-      event, queue = tuple
-      app_hash[app_key] << [event, queue]
+      class_name, queue, filters = tuple
+      if filters["bus_event_type"]
+        event = filters["bus_event_type"]
+      else
+        event = "see filter"
+      end
       
+      app_hash[app_key] << [event, class_name, queue, filters]
+      
+      class_hash[class_name] ||= []
+      class_hash[class_name] << [app_key, event, queue, filters]
+
       event_hash[event] ||= []
-      event_hash[event] << [app_key, queue]
+      event_hash[event] << [app_key, class_name, queue, filters]
     end
   end
   
   # sort each list item by secondary label
-  event_hash.each do |_, array|
+  class_hash.each do |_, array|
     array.sort!{ |a,b| a.first <=> b.first }
   end
   event_hash.each do |_, array|
@@ -49,8 +59,9 @@ else
     if !val
       out = "<td>&nbsp;</td><td>&nbsp;</td>"
     else
-      detail, queue = val
-      out = "<td>#{h(detail)}</td><td><a href='#{u("queues/#{queue}")}'>#{h(queue)}</a></td>"
+      one, two, queue, filters = val
+      out = "<td>#{h(one)}</td><td>#{h(two)}</td><td><a href='#{u("queues/#{queue}")}'>#{h(queue)}</a></td>"
+      out << "<td>#{h(Resque.encode(filters).gsub(/\"bus_special_value_(\w+)\"/){ "(#{$1})" }).gsub(" ", "&nbsp;").gsub('&quot;,&quot;', '&quot;, &quot;')}</td>"
     end
     
     if first
@@ -77,25 +88,46 @@ else
 
 
 <h1 class='wi'>Applications</h1>
-<p class='intro'>The apps below have registered the given event types and queues.</p>
+<p class='intro'>The apps below have registered the given classes and queues.</p>
 <table class='queues'>
   <tr>
     <th>App Key</th>
     <th>Event Type</th>
+    <th>Class Name</th>
     <th>Queue</th>
+    <th>Filters</th>
   </tr>
   <%= output_hash(app_hash, ["Unsubscribe", "bus/unsubscribe"]) %>
 </table>
 
 <p>&nbsp;</p>
-  
+
 <h1 class='wi'>Events</h1>
-<p class='intro'>The event types below have been registered by the given applications and queues.</p>
+<p class='intro'>The events below have been registered by the given applications and queues.</p>
 <table class='queues'>
   <tr>
     <th>Event Type</th>
     <th>App Key</th>
+    <th>Class Name</th>
     <th>Queue</th>
+    <th>Filters</th>
   </tr>
   <%= output_hash(event_hash, false) %>
+</table>
+
+
+
+<p>&nbsp;</p>
+  
+<h1 class='wi'>Classes</h1>
+<p class='intro'>The classes below have been registered by the given applications and queues.</p>
+<table class='queues'>
+  <tr>
+    <th>Class Name</th>
+    <th>App Key</th>
+    <th>Event Type</th>
+    <th>Queue</th>
+    <th>Filters</th>
+  </tr>
+  <%= output_hash(class_hash, false) %>
 </table>

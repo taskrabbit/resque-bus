@@ -1,5 +1,6 @@
 require 'resque-bus'
 require 'resque/server'
+require 'erb'
 
 # Extend Resque::Server to add tabs.
 module ResqueBus

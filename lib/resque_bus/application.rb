@@ -67,7 +67,7 @@ module ResqueBus
     def event_display_tuples
       out = []
       subscriptions.all.each do |sub|
-        out << [sub.event_name, sub.queue_name]
+        out << [sub.class_name, sub.queue_name, sub.matcher.filters]
       end
       out
     end
