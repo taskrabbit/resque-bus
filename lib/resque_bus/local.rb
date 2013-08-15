@@ -21,7 +21,7 @@ module ResqueBus
 
       # looking directly at subscriptions loaded into dispatcher
       # so we don't need redis server up
-      def self.subscription_matches(attributes)
+      def subscription_matches(attributes)
         out = []
         ResqueBus.dispatchers.each do |dispatcher|
           out.concat(dispatcher.subscription_matches(attributes))
