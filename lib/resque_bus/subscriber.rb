@@ -38,10 +38,13 @@ module ResqueBus
       def transform(method_name)
         @transform = method_name
       end
+      
       def perform(attributes)
-        sub_key = attributes["bus_rider_sub_key"]
-        meth_key = sub_key.split(".").last
-        resque_bus_execute(meth_key, attributes)
+        ResqueBus.with_global_attributes(attributes) do
+          sub_key = attributes["bus_rider_sub_key"]
+          meth_key = sub_key.split(".").last
+          resque_bus_execute(meth_key, attributes)
+        end
       end
       
       def resque_bus_execute(key, attributes)
