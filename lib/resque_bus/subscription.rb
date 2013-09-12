@@ -33,7 +33,9 @@ module ResqueBus
     
     def execute!(attributes)
       attributes = attributes.with_indifferent_access if attributes.respond_to?(:with_indifferent_access)
-      executor.call(attributes)
+      ResqueBus.with_global_attributes(attributes) do
+        executor.call(attributes)
+      end
     end
     
     def matches?(attributes)

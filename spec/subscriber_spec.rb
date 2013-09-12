@@ -229,5 +229,24 @@ module ResqueBus
       
       ResqueBus.redis.lpop("queue:myqueue").should be_nil
     end
+    
+    describe ".perform" do
+      let(:attributes) { {"bus_rider_sub_key"=>"SubscriberTest1.event_sub", "bus_locale" => "en", "bus_timezone" => "PST"} }
+      it "should call the method based on key" do
+        SubscriberTest1.any_instance.should_receive(:event_sub)
+        SubscriberTest1.perform(attributes)
+      end
+      it "should set the timezone and locale if present" do
+        defined?(I18n).should be_nil
+        Time.respond_to?(:zone).should be_false
+
+        stub_const("I18n", Class.new)
+        I18n.should_receive(:locale=).with("en")
+        Time.should_receive(:zone=).with("PST")
+        
+        SubscriberTest1.any_instance.should_receive(:event_sub)
+        SubscriberTest1.perform(attributes)
+      end
+    end
   end
 end
