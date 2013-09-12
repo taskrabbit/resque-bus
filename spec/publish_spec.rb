@@ -44,5 +44,32 @@ describe "Publishing an event" do
     hash["class"].should == "ResqueBus::Driver"
     hash["args"].should == [ {"bus_event_type" => event_name, "two"=>"here", "one"=>1}.merge(bus_attrs).merge("bus_id" => 'app-given') ]
   end
+  
+
+  
+  it "should set the timezone and locale if available" do
+    defined?(I18n).should be_nil
+    Time.respond_to?(:zone).should be_false
+    
+    stub_const("I18n", Class.new)
+    I18n.should_receive(:locale).and_return("jp")
+    
+    Time.should_receive(:zone).and_return(double('zone', :name => "EST"))
+    
+    hash = {:one => 1, "two" => "here", "bus_id" => "app-given" }
+    event_name = "event_name"
+    
+    val = ResqueBus.redis.lpop("queue:resquebus_incoming")
+    val.should == nil
+    
+    ResqueBus.publish(event_name, hash)
+    
+    val = ResqueBus.redis.lpop("queue:resquebus_incoming")
+    hash = JSON.parse(val)
+    hash["class"].should == "ResqueBus::Driver"
+    att = hash["args"].first
+    att["bus_locale"].should == "jp"
+    att["bus_timezone"].should == "EST"
+  end
 
 end

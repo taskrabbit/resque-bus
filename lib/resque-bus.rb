@@ -117,11 +117,26 @@ module ResqueBus
       @original_redis
     end
     
+    def with_global_attributes(attributes)
+      original_timezone = false
+      original_locale   = false
+      
+      I18n.locale = attributes["bus_locale"]   if defined?(I18n) && I18n.respond_to?(:locale=)
+      Time.zone   = attributes["bus_timezone"] if defined?(Time) && Time.respond_to?(:zone=)
+      
+      yield
+    ensure
+      I18n.locale = original_locale   unless original_locale   == false
+      Time.zone   = original_timezone unless original_timezone == false
+    end
+    
     def publish_metadata(event_type, attributes={})
       # TODO: "bus_app_key" => application.app_key ?
       bus_attr = {"bus_published_at" => Time.now.to_i, "created_at" => Time.now.to_i, "bus_event_type" => event_type}
-      bus_attr["bus_id"] ||= "#{Time.now.to_i}-#{generate_uuid}"
+      bus_attr["bus_id"]           = "#{Time.now.to_i}-#{generate_uuid}"
       bus_attr["bus_app_hostname"] = hostname
+      bus_attr["bus_locale"]       = I18n.locale    if defined?(I18n) && I18n.respond_to?(:locale)
+      bus_attr["bus_timezone"]     = Time.zone.name if defined?(Time) && Time.respond_to?(:zone)
       bus_attr.merge(attributes || {})
     end
     
