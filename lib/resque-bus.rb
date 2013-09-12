@@ -135,8 +135,8 @@ module ResqueBus
       bus_attr = {"bus_published_at" => Time.now.to_i, "created_at" => Time.now.to_i, "bus_event_type" => event_type}
       bus_attr["bus_id"]           = "#{Time.now.to_i}-#{generate_uuid}"
       bus_attr["bus_app_hostname"] = hostname
-      bus_attr["bus_locale"]       = I18n.locale    if defined?(I18n) && I18n.respond_to?(:locale)
-      bus_attr["bus_timezone"]     = Time.zone.name if defined?(Time) && Time.respond_to?(:zone)
+      bus_attr["bus_locale"]       = I18n.locale.to_s if defined?(I18n) && I18n.respond_to?(:locale)
+      bus_attr["bus_timezone"]     = Time.zone.name   if defined?(Time) && Time.respond_to?(:zone)
       bus_attr.merge(attributes || {})
     end
     
