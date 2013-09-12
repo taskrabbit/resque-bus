@@ -10,7 +10,6 @@ describe "Publishing an event" do
     Timecop.return
   end
   let(:bus_attrs) { {"bus_published_at" => Time.now.to_i,
-                     "created_at" => Time.now.to_i,
                      "bus_id"=>"#{Time.now.to_i}-idfhlkj",
                      "bus_app_hostname" =>  `hostname 2>&1`.strip.sub(/.local/,'')} }
   

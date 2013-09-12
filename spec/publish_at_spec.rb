@@ -11,7 +11,6 @@ describe "Publishing an event in the future" do
   end
   let(:delayed_attrs) { {"bus_delayed_until" => future.to_i,
                      "bus_id" => "#{now.to_i}-idfhlkj",
-                     "created_at" => now.to_i,
                      "bus_app_hostname" =>  `hostname 2>&1`.strip.sub(/.local/,'')} }
   
   let(:bus_attrs) { delayed_attrs.merge({"bus_published_at" => worktime.to_i})}
