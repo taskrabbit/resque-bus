@@ -13,7 +13,7 @@ module ResqueBus
       end
 
       def perform(attributes={})
-        raise "No attribiutes passed" if attributes.empty?
+        raise "No attributes passed" if attributes.empty?
 
         ResqueBus.log_worker("Driver running: #{attributes.inspect}")
 

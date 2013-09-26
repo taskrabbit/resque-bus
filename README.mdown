@@ -101,6 +101,75 @@ If you want retry to work for subscribing apps, you should run resque-scheduler
     
     $ rake resquebus:driver resque:scheduler
 
+### Heartbeat
+
+We've found it useful to have the bus act like cron. Triggering timed jobs throughout the system. Resque Bus calls this a heartbeat.
+It uses resque-scheduler to trigger the events. You can enable it in your Rakefile.
+
+    # resque.rake
+    namespace :resque do
+      task :setup => [:environment] do
+        ResqueBus.heartbeat!
+      end
+    end
+
+Or add it to your `schedule.yml` directly
+
+    resquebus_heartbeat:
+      cron: "* * * * *"
+      class: "::ResqueBus::Heartbeat"
+      queue: resquebus_incoming
+      description: "I publish a heartbeat_minutes event every minute"
+
+It is the equivalent of doing this every minute
+
+seconds = minutes * (60)
+hours   = minutes / (60)
+days    = minutes / (60*24)
+
+now     = Time.at(seconds)
+
+attributes = {}
+
+
+    now = Time.now
+    seconds = now.to_i
+    ResqueBus.publish("hearbeat_minutes", {
+      "epoch_seconds" => seconds,
+      "epoch_minutes" => seconds / 1.minute,
+      "epoch_hours"   => seconds / 1.hour,
+      "epoch_days"    => seconds / 1.day,
+      "minute"        => now.min
+      "hour"          => now.hour
+      "day"           => now.day
+      "month"         => now.month
+      "year"          => now.year
+      "yday"          => now.yday
+      "wday"          => now.wday
+    })
+
+This allows you do something like this:
+
+    ResqueBus.dispatch("app_c") do
+      # runs at 10:20, 11:20, etc
+      subscribe "once_an_hour", 'bus_event_type' => 'heartbeat_minutes', 'minute' => 20 do |attributes|
+        Sitemap.generate!
+      end
+      
+      # runs every five minutes
+      subscribe "every_five_minutes", 'bus_event_type' => 'heartbeat_minutes' do |attributes|
+        next unless attributes["epoch_minutes"] % 5 == 0
+        HealthCheck.run!
+      end
+      
+      # runs at 8am on the first of every month
+      subscribe "new_month_morning", 'bus_event_type' => 'heartbeat_minutes', 'day' => 1, hour' => 8, 'minute' => 0,  do |attributes|
+        next unless attributes["epoch_minutes"] % 5 == 0
+        Token.old.expire!
+      end
+    end
+
+
 ### Compatibility
 
 ResqueBus can live along side another instance of Resque that points at a different Redis server.
