@@ -34,7 +34,7 @@ module ResqueBus
       end
     end
     
-    describe ".peform" do
+    describe ".perform" do
       let(:attributes) { {"x" => "y"} }
       
       before(:each) do

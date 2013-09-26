@@ -3,12 +3,12 @@ require "resque_bus/version"
 require 'redis/namespace'
 require 'resque'
 
-
 module ResqueBus
   
   autoload :Application,      'resque_bus/application'
   autoload :Dispatch,         'resque_bus/dispatch'
   autoload :Driver,           'resque_bus/driver'
+  autoload :Heartbeat,        'resque_bus/heartbeat'
   autoload :Local,            'resque_bus/local'
   autoload :Matcher,          'resque_bus/matcher'
   autoload :Publisher,        'resque_bus/publisher'
@@ -70,6 +70,23 @@ module ResqueBus
 
     def local_mode
       @local_mode
+    end
+    
+    def heartbeat!
+      # turn on the heartbeat
+      # should be down after loading scheduler yml if you do that
+      # otherwise, anytime
+      require 'resque/scheduler'
+      name     = 'resquebus_hearbeat'
+      schedule = { 'class' => '::ResqueBus::Heartbeat',
+                   'cron'  => '* * * * *',   # every minute
+                   'queue' => incoming_queue,
+                   'description' => 'I publish a heartbeat_minutes event every minute'
+                 }
+      if Resque::Scheduler.dynamic
+        Resque.set_schedule(name, schedule)
+      end
+      Resque.schedule[name] = schedule
     end
 
     # Accepts:
