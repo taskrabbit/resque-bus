@@ -92,7 +92,7 @@ Note: This subscribes when this class is loaded, so it needs to be in your load 
 
 ### Commands
 
-Each app needs to tell it's subscriptions to Redis
+Each app needs to tell Redis about its subscriptions:
 
     $ rake resquebus:subscribe
 
@@ -110,7 +110,7 @@ If you want retry to work for subscribing apps, you should run resque-scheduler
 
 ### Heartbeat
 
-We've found it useful to have the bus act like cron. Triggering timed jobs throughout the system. Resque Bus calls this a heartbeat.
+We've found it useful to have the bus act like `cron`, triggering timed jobs throughout the system. Resque Bus calls this a heartbeat.
 It uses resque-scheduler to trigger the events. You can enable it in your Rakefile.
 
     # resque.rake
@@ -199,8 +199,7 @@ That will use the default (resque) namespace which can be helpful for using the 
 
 ### Local Mode
 
-For development, a local mode is also provided and is specified in the
-configuration.
+For development, a local mode is also provided and is specified in the configuration.
 
     # config
     ResqueBus.local_mode = :standalone
