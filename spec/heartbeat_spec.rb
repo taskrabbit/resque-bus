@@ -35,8 +35,6 @@ module ResqueBus
         Heartbeat.perform
       end
       
-      debugger
-      
       Timecop.freeze "12/12/2013 12:02:01" do
         ResqueBus.should_receive(:publish).with("heartbeat_minutes", now_attributes)
         Heartbeat.perform

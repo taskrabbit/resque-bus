@@ -41,9 +41,19 @@ module ResqueBus
         "resquebus:heartbeat:timestamp"
       end
 
+      def environment_name
+        ENV["RAILS_ENV"] || ENV["RACK_ENV"] || ENV["RESQUEBUS_ENV"]
+      end
+      
       def get_saved_minute!
         key = ResqueBus.redis.get(redis_key)
         return nil if key.nil?
+        case environment_name
+        when 'development', 'test'
+          # only 3 minutes in development; otherwise, TONS of events if not run in a while
+          three_ago = Time.now.to_i - 3*60*60
+          key = three_ago if key.to_i < three_ago
+        end
         return key.to_i
       end
 
