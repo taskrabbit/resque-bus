@@ -190,22 +190,22 @@ module ResqueBus
 
       hash = JSON.parse(ResqueBus.redis.lpop("queue:myqueue"))
       hash["class"].should == "SubscriberTest1"
-      hash["args"].should == [ {"bus_rider_app_key"=>"my_thing", "bus_rider_sub_key"=>"SubscriberTest1.event_sub", "bus_rider_queue" => "myqueue", "bus_rider_class_name"=>"SubscriberTest1",
+      hash["args"].should == [ {"bus_rider_app_key"=>"my_thing", "bus_rider_sub_key"=>"SubscriberTest1.thing_filter", "bus_rider_queue" => "myqueue", "bus_rider_class_name"=>"SubscriberTest1",
                                 "bus_event_type" => "event_sub", "x" => "y"}.merge(bus_attrs) ]
                                 
       Runner1.value.should == 0
       Runner2.value.should == 0
       Util.constantize(hash["class"]).perform(*hash["args"])
-      Runner1.value.should == 1
-      Runner2.value.should == 0
+      Runner1.value.should == 0
+      Runner2.value.should == 1
       
       hash = JSON.parse(ResqueBus.redis.lpop("queue:myqueue"))
       hash["class"].should == "SubscriberTest1"
-      hash["args"].should == [ {"bus_rider_app_key"=>"my_thing", "bus_rider_sub_key"=>"SubscriberTest1.thing_filter", "bus_rider_queue" => "myqueue", "bus_rider_class_name"=>"SubscriberTest1",
+      hash["args"].should == [ {"bus_rider_app_key"=>"my_thing", "bus_rider_sub_key"=>"SubscriberTest1.event_sub", "bus_rider_queue" => "myqueue", "bus_rider_class_name"=>"SubscriberTest1",
                                 "bus_event_type" => "event_sub", "x" => "y"}.merge(bus_attrs) ]
-                                
-      Runner1.value.should == 1
-      Runner2.value.should == 0
+         
+      Runner1.value.should == 0
+      Runner2.value.should == 1
       Util.constantize(hash["class"]).perform(*hash["args"])
       Runner1.value.should == 1
       Runner2.value.should == 1

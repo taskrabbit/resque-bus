@@ -80,20 +80,11 @@ module ResqueBus
         
         hash = JSON.parse(ResqueBus.redis.lpop("queue:default"))
         hash["class"].should == "::ResqueBus::Rider"
-        hash["args"][0].should == {"bus_rider_app_key"=>"app3", "x" => "y", "bus_event_type" => "event5", "bus_rider_sub_key"=>"event5", "bus_rider_queue" => "default"}.merge(bus_attrs)
-        first = hash["args"][0]["bus_rider_sub_key"]
-        
+        hash["args"][0].should == {"bus_rider_app_key"=>"app3", "x" => "y", "bus_event_type" => "event5", "bus_rider_sub_key"=>"event[45]", "bus_rider_queue" => "default"}.merge(bus_attrs)
+
         hash = JSON.parse(ResqueBus.redis.lpop("queue:default"))
         hash["class"].should == "::ResqueBus::Rider"
-        hash["args"][0].should == {"bus_rider_app_key"=>"app3", "x" => "y", "bus_event_type" => "event5", "bus_rider_sub_key"=>"event[45]", "bus_rider_queue" => "default"}.merge(bus_attrs)
-        second= hash["args"][0]["bus_rider_sub_key"]
-        
-        if first == "event[45]"
-          second.should == "event5"
-        else
-          first.should == "event5"
-          second.should == "event[45]"
-        end
+        hash["args"][0].should == {"bus_rider_app_key"=>"app3", "x" => "y", "bus_event_type" => "event5", "bus_rider_sub_key"=>"event5", "bus_rider_queue" => "default"}.merge(bus_attrs)
       end
     end
   end

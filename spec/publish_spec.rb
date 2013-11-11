@@ -51,9 +51,9 @@ describe "Publishing an event" do
     Time.respond_to?(:zone).should be_false
     
     stub_const("I18n", Class.new)
-    I18n.should_receive(:locale).and_return("jp")
+    I18n.stub(:locale).and_return("jp")
     
-    Time.should_receive(:zone).and_return(double('zone', :name => "EST"))
+    Time.stub(:zone).and_return(double('zone', :name => "EST"))
     
     hash = {:one => 1, "two" => "here", "bus_id" => "app-given" }
     event_name = "event_name"
