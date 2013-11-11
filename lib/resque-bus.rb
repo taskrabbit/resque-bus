@@ -146,6 +146,17 @@ module ResqueBus
       I18n.locale = original_locale   unless original_locale   == false
       Time.zone   = original_timezone unless original_timezone == false
     end
+
+    def before_publish=(proc)
+      @before_publish_callback = proc
+    end
+
+    def before_publish_callback(attributes)
+      if @before_publish_callback
+        @before_publish_callback.call(attributes)
+      end
+    end
+
     
     def publish_metadata(event_type, attributes={})
       # TODO: "bus_app_key" => application.app_key ?
@@ -154,7 +165,9 @@ module ResqueBus
       bus_attr["bus_app_hostname"] = hostname
       bus_attr["bus_locale"]       = I18n.locale.to_s if defined?(I18n) && I18n.respond_to?(:locale) && I18n.locale
       bus_attr["bus_timezone"]     = Time.zone.name   if defined?(Time) && Time.respond_to?(:zone)   && Time.zone
-      bus_attr.merge(attributes || {})
+      out = bus_attr.merge(attributes || {})
+      ResqueBus.before_publish_callback(out)
+      out
     end
     
     def generate_uuid
@@ -224,6 +237,7 @@ module ResqueBus
       @dispatcher = nil
       @default_app_key = nil
       @default_queue = nil
+      @before_publish_callback = nil
     end
     
     def incoming_queue
