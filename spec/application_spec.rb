@@ -143,7 +143,7 @@ module ResqueBus
         Application.new("myapp").subscription_matches("bus_event_type"=>"three").collect{|s| [s.app_key, s.key, s.queue_name, s.class_name]}.should == []
         
         Application.new("myapp").subscription_matches("bus_event_type"=>"onex").collect{|s| [s.app_key, s.key, s.queue_name, s.class_name]}.should =~ [["myapp", "(?-mix:one.+)", "default", "::ResqueBus::Rider"]]
-        Application.new("myapp").subscription_matches("bus_event_type"=>"donex").collect{|s| [s.app_key, s.key, s.queue_name, s.class_name]}.should =~ [["myapp", "(?-mix:one.+)", "default", "::ResqueBus::Rider"]]
+        Application.new("myapp").subscription_matches("bus_event_type"=>"donex").collect{|s| [s.app_key, s.key, s.queue_name, s.class_name]}.should =~ []
         Application.new("myapp").subscription_matches("bus_event_type"=>"one").collect{|s| [s.app_key, s.key, s.queue_name, s.class_name]}.should =~ [["myapp", "one" ,"default", "::ResqueBus::Rider"]]
         Application.new("myapp").subscription_matches("bus_event_type"=>"one_x").collect{|s| [s.app_key, s.key, s.queue_name, s.class_name]}.should =~ [["myapp", "(?-mix:one.+)", "default", "::ResqueBus::Rider"], ["myapp", "(?-mix:one_.*)", "default", "::ResqueBus::Rider"]]
       end
