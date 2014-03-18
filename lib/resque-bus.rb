@@ -138,9 +138,16 @@ module ResqueBus
       original_timezone = false
       original_locale   = false
       
-      I18n.locale = attributes["bus_locale"]   if defined?(I18n) && I18n.respond_to?(:locale=)
-      Time.zone   = attributes["bus_timezone"] if defined?(Time) && Time.respond_to?(:zone=)
+      if attributes["bus_locale"] && defined?(I18n) && I18n.respond_to?(:locale=)
+        original_locale = I18n.locale if I18n.respond_to?(:locale)
+        I18n.locale = attributes["bus_locale"]
+      end
       
+      if attributes["bus_timezone"] && defined?(Time) && Time.respond_to?(:zone=)
+        original_timezone = Time.zone if Time.respond_to?(:zone)
+        Time.zone = attributes["bus_timezone"]
+      end
+
       yield
     ensure
       I18n.locale = original_locale   unless original_locale   == false
