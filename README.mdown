@@ -2,6 +2,14 @@
 
 This gem uses Redis and Resque to allow simple asynchronous communication between apps.
 
+### Install
+
+To install, include the 'resque-bus' gem and add the following to your Rakefile:
+
+```ruby
+require "resque_bus/tasks"
+```
+
 ### Example
 
 Application A can publish an event
