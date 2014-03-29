@@ -1,3 +1,4 @@
+require 'json'
 require 'timecop'
 require 'resque-bus'
 require 'resque/scheduler'

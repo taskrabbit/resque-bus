@@ -43,7 +43,7 @@ module ResqueBus
       begin
         # if it's already a regex, don't mess with it
         # otherwise, it should have start and end line situation
-        if mine[0..6] == "(?-mix:"
+        if mine[0..6] == "(?-mix:" || mine.chars.count("/") >= 2
           regex = Regexp.new(mine)
         else
           regex = Regexp.new("^#{mine}$")
@@ -72,7 +72,11 @@ module ResqueBus
         when :key, :blank, :nil, :present, :empty, :value
           value = "#{SPECIAL_PREPEND}#{value}"
         end
-        out[key.to_s] = value.to_s
+        if value.class == Regexp
+          out[key.to_s] = value.source
+        else
+          out[key.to_s] = value.to_s
+        end
       end      
       out
     end
