@@ -4,6 +4,11 @@ module ResqueBus
 
     class << self
       def perform(attributes = {})
+        if ResqueBus.local_mode == :suppress
+          ResqueBus.log_worker("Suppressed: #{attributes.inspect}")
+          return  # not doing anything
+        end
+
         ResqueBus.log_worker("Local running: #{attributes.inspect}")
 
         # looking for subscriptions, not queues
@@ -12,8 +17,7 @@ module ResqueBus
           to_publish = bus_attr.merge(attributes || {})
           if ResqueBus.local_mode == :standalone
             ResqueBus.enqueue_to(sub.queue_name, sub.class_name, bus_attr.merge(attributes || {}))
-          # defaults to inline mode
-          else ResqueBus.local_mode == :inline
+          else  # defaults to inline mode
             sub.execute!(to_publish)
           end
         end
