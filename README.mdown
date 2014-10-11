@@ -221,7 +221,7 @@ That will use the default (resque) namespace which can be helpful for using the 
 ```ruby
 # config
 Resque.redis = "192.168.1.0:6379"
-ResqusBus.redis.namespace = :get_on_the_bus
+ResqueBus.redis.namespace = :get_on_the_bus
 ```
 
 ### Local Mode
