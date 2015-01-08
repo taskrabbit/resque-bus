@@ -49,11 +49,6 @@ namespace :resquebus do
     require "resque-bus"
     require "resque/failure/redis"
     require "resque/failure/multiple_with_retry_suppression"
-
-    # change the namespace to be the ones used by ResqueBus
-    # save the old one for handling later
-    ResqueBus.original_redis = Resque.redis
-    Resque.redis = ResqueBus.redis
     
     Resque::Failure::MultipleWithRetrySuppression.classes = [Resque::Failure::Redis]
     Resque::Failure.backend = Resque::Failure::MultipleWithRetrySuppression

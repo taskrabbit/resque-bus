@@ -35,14 +35,8 @@ describe "ResqueBus config" do
     ResqueBus.before_publish_callback({}).should == 42
   end
 
-  it "should use Redis connection specified if given" do
-    ResqueBus.redis = "localhost:9379"
-    ResqueBus.redis.instance_variable_get("@redis").client.port.should == 9379
-    Resque.redis.instance_variable_get("@redis").client.port.should == 6379
-  end
 
-  it "should use the default Resque connection if none specified" do
-    ResqueBus.redis.instance_variable_get("@redis").client.port.should == 6379
-    Resque.redis.instance_variable_get("@redis").client.port.should == 6379
+  it "should use the default Resque connection" do
+    ResqueBus.redis.should == Resque.redis
   end
 end

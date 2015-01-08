@@ -22,14 +22,8 @@ module ResqueBus
         # attributes["bus_published_at"]
         # attributes["bus_driven_at"]
         
-        # allow the real Reqsue to be used inside the callback while in a worker
-        Resque.redis = ResqueBus.original_redis if ResqueBus.original_redis
-        
         # (now running with the real app that subscribed)
         ResqueBus.dispatcher_execute(app_key, sub_key, attributes.merge("bus_executed_at" => Time.now.to_i))
-      ensure
-        # put this back if running in the thread
-        Resque.redis = ResqueBus.redis if ResqueBus.original_redis
       end
       
       # @failure_hooks_already_ran on https://github.com/defunkt/resque/tree/1-x-stable
