@@ -103,18 +103,18 @@ module ResqueBus
       matcher.matches?("name" => "ct").should == false
       matcher.matches?("name" => "bcat").should == false
       
-      ResqueBus.redis.set("temp1", Resque.encode(matcher.to_redis))
+      ResqueBus.redis.set("temp1", ResqueBus::Util.encode(matcher.to_redis))
       redis = ResqueBus.redis.get("temp1")
-      matcher = Matcher.new(Resque.decode(redis))
+      matcher = Matcher.new(ResqueBus::Util.decode(redis))
       matcher.matches?("name" => "cat").should == true
       matcher.matches?("name" => "bat").should == true
       matcher.matches?("name" => "caaaaat").should == true
       matcher.matches?("name" => "ct").should == false
       matcher.matches?("name" => "bcat").should == false
       
-      ResqueBus.redis.set("temp2", Resque.encode(matcher.to_redis))
+      ResqueBus.redis.set("temp2", ResqueBus::Util.encode(matcher.to_redis))
       redis = ResqueBus.redis.get("temp2")
-      matcher = Matcher.new(Resque.decode(redis))
+      matcher = Matcher.new(ResqueBus::Util.decode(redis))
       matcher.matches?("name" => "cat").should == true
       matcher.matches?("name" => "bat").should == true
       matcher.matches?("name" => "caaaaat").should == true
@@ -127,15 +127,15 @@ module ResqueBus
       matcher.matches?("name" => "cat").should == false
       matcher.matches?("name" => "").should    == true
       
-      ResqueBus.redis.set("temp1", Resque.encode(matcher.to_redis))
+      ResqueBus.redis.set("temp1", ResqueBus::Util.encode(matcher.to_redis))
       redis = ResqueBus.redis.get("temp1")
-      matcher = Matcher.new(Resque.decode(redis))
+      matcher = Matcher.new(ResqueBus::Util.decode(redis))
       matcher.matches?("name" => "cat").should == false
       matcher.matches?("name" => "").should    == true
       
-      ResqueBus.redis.set("temp2", Resque.encode(matcher.to_redis))
+      ResqueBus.redis.set("temp2", ResqueBus::Util.encode(matcher.to_redis))
       redis = ResqueBus.redis.get("temp2")
-      matcher = Matcher.new(Resque.decode(redis))
+      matcher = Matcher.new(ResqueBus::Util.decode(redis))
       matcher.matches?("name" => "cat").should == false
       matcher.matches?("name" => "").should    == true
     end

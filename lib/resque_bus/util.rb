@@ -1,6 +1,35 @@
+require 'multi_json'
+
 module ResqueBus
   module Util
     extend self
+
+    class DecodeException < StandardError; end
+
+    # Given a Ruby object, returns a string suitable for storage in a
+    # queue.
+    def encode(object)
+      if MultiJson.respond_to?(:dump) && MultiJson.respond_to?(:load)
+        MultiJson.dump object
+      else
+        MultiJson.encode object
+      end
+    end
+
+    # Given a string, returns a Ruby object.
+    def decode(object)
+      return unless object
+
+      begin
+        if MultiJson.respond_to?(:dump) && MultiJson.respond_to?(:load)
+          MultiJson.load object
+        else
+          MultiJson.decode object
+        end
+      rescue ::MultiJson::DecodeError => e
+        raise DecodeException, e.message, e.backtrace
+      end
+    end
     
     def underscore(camel_cased_word)
       word = camel_cased_word.to_s.dup

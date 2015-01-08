@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
   s.add_dependency('resque', ['>= 1.10.0', '< 2.0'])
   s.add_dependency('resque-scheduler', '>= 2.0.1')
   s.add_dependency('resque-retry')
+  s.add_dependency("multi_json")
   s.add_dependency("redis")
   
   s.add_development_dependency("rspec")

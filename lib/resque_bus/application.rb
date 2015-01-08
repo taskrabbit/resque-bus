@@ -31,7 +31,7 @@ module ResqueBus
       
       redis_hash = subscription_list.to_redis
       redis_hash.each do |key, hash|
-        ResqueBus.redis.hset(temp_key, key, Resque.encode(hash))
+        ResqueBus.redis.hset(temp_key, key, ResqueBus::Util.encode(hash))
       end
       
       # make it the real one
@@ -103,8 +103,8 @@ module ResqueBus
       out = {}
       ResqueBus.redis.hgetall(redis_key).each do |key, val|
         begin
-          out[key] = Resque.decode(val)
-        rescue Resque::Helpers::DecodeException
+          out[key] = ResqueBus::Util.decode(val)
+        rescue ResqueBus::Util::DecodeException
           out[key] = val
         end
       end

@@ -61,7 +61,7 @@ else
     else
       one, two, queue, filters = val
       out = "<td>#{h(one)}</td><td>#{h(two)}</td><td><a href='#{u("queues/#{queue}")}'>#{h(queue)}</a></td>"
-      out << "<td>#{h(Resque.encode(filters).gsub(/\"bus_special_value_(\w+)\"/){ "(#{$1})" }).gsub(" ", "&nbsp;").gsub('&quot;,&quot;', '&quot;, &quot;')}</td>"
+      out << "<td>#{h(ResqueBus::Util.encode(filters).gsub(/\"bus_special_value_(\w+)\"/){ "(#{$1})" }).gsub(" ", "&nbsp;").gsub('&quot;,&quot;', '&quot;, &quot;')}</td>"
     end
     
     if first
