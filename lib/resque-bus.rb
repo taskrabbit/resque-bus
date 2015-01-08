@@ -23,6 +23,11 @@ module ResqueBus
   autoload :TaskManager,      'resque_bus/task_manager'
   autoload :Util,             'resque_bus/util'
 
+  module Adapters
+    autoload :Base,           'resque_bus/adapters/base'
+    autoload :Resque,         'resque_bus/adapters/resque'
+  end
+
   class << self
 
     include Publishing
@@ -34,7 +39,8 @@ module ResqueBus
                             :local_mode=, :local_mode,
                             :before_publish=, :before_publish_callback,
                             :logger=, :logger, :log_application, :log_worker,
-                            :hostname=, :hostname
+                            :hostname=, :hostname,
+                            :adapter=, :adapter
 
     def_delegators :_dispatchers, :dispatch, :dispatchers, :dispatcher_by_key, :dispatcher_execute
     

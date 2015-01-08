@@ -1,5 +1,13 @@
 require 'spec_helper'
 
+module ResqueBus
+  module Adapters
+    class TestOne
+
+    end
+  end
+end
+
 describe "ResqueBus config" do
   it "should set the default app key" do
     ResqueBus.default_app_key.should == nil
@@ -39,4 +47,30 @@ describe "ResqueBus config" do
   it "should use the default Resque connection" do
     ResqueBus.redis.should == Resque.redis
   end
+
+  it "should default to resque adapter" do
+    ResqueBus.adapter.is_a?(ResqueBus::Adapters::Resque).should == true
+
+    # and should raise if already set
+    lambda {
+      ResqueBus.adapter = :resque
+    }.should raise_error
+  end
+
+  it "should be able to be set to resque" do
+    ResqueBus.adapter = :resque
+    ResqueBus.adapter.is_a?(ResqueBus::Adapters::Resque).should == true
+
+    # and should raise if already set
+    lambda {
+      ResqueBus.adapter = :resque
+    }.should raise_error
+  end
+
+  it "should be able to be set to something else" do
+    ResqueBus.adapter = :test_one
+    ResqueBus.adapter.is_a?(ResqueBus::Adapters::TestOne).should == true
+  end
+
+
 end

@@ -12,6 +12,22 @@ module ResqueBus
       word.downcase!
       word
     end
+
+    def classify(table_name)
+      # strip out any leading schema name
+      # camelize(singularize(table_name.to_s.sub(/.*\./, '')))
+      camelize(table_name.to_s.sub(/.*\./, ''))
+    end
+
+    def camelize(term)
+      string = term.to_s
+      # string = string.sub(/^[a-z\d]*/) { inflections.acronyms[$&] || $&.capitalize }
+      string = string.sub(/^[a-z\d]*/) { $&.capitalize }
+      # string.gsub!(/(?:_|(\/))([a-z\d]*)/i) { "#{$1}#{inflections.acronyms[$2] || $2.capitalize}" }
+      string.gsub!(/(?:_|(\/))([a-z\d]*)/i) { "#{$1}#{$2.capitalize}" }
+      string.gsub!(/\//, '::')
+      string
+    end
     
     def constantize(camel_cased_word)
       names = camel_cased_word.split('::')
