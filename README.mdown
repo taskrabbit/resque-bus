@@ -223,8 +223,9 @@ This can be helpful inside some sort of migration, for example.
 
 ### TODO
 
-* Refactor to a runtime adapter for Resque, so we can make them for Sidkiq and others
-* Refactor to a storage adapter for Redis, so we can store info in MySQL 
+* Sidekiq adapter
+* Refactor to a storage adapter for Redis, so we can store subscription info in MySQL or something else
+* Replace local modes with adapters
 * There are a few spots in the code with TODO notes
 * Make this not freak out in development without Redis or when Redis is down
 * We might not actually need to publish in tests
