@@ -19,6 +19,11 @@ module ResqueBus
       @adapter_instance
     end
 
+    def redis
+      # TODO: could allow setting for non-redis adapters
+      adapter.redis
+    end
+
     def default_app_key=val
       @default_app_key = Application.normalize(val)
     end

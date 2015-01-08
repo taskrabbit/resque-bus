@@ -1,8 +1,5 @@
 require "resque_bus/version"
 
-require 'redis/namespace'
-require 'resque'
-
 module ResqueBus
   
   autoload :Application,      'resque_bus/application'
@@ -40,13 +37,10 @@ module ResqueBus
                             :before_publish=, :before_publish_callback,
                             :logger=, :logger, :log_application, :log_worker,
                             :hostname=, :hostname,
-                            :adapter=, :adapter
+                            :adapter=, :adapter,
+                            :redis
 
     def_delegators :_dispatchers, :dispatch, :dispatchers, :dispatcher_by_key, :dispatcher_execute
-    
-    def redis
-      Resque.redis
-    end
     
     protected
     
@@ -62,16 +56,6 @@ module ResqueBus
 
     def _dispatchers
       @_dispatchers ||= ::ResqueBus::Dispatchers.new
-    end
-
-    
-    def incoming_queue
-      "resquebus_incoming"
-    end
-
-    def default_namespace
-      # It might play better on the same server, but overall life is more complicated
-      :resque
     end
   end
   

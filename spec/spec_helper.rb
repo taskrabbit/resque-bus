@@ -50,7 +50,6 @@ def test_list(*args)
   out
 end
 
-
 Resque::Scheduler.mute = true
 
 RSpec.configure do |config|
@@ -69,5 +68,3 @@ RSpec.configure do |config|
     ResqueBus::Runner2.reset
   end
 end
-
-ResqueBus.redis.namespace = "resquebus_test"
