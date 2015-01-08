@@ -17,15 +17,15 @@ module ResqueBus
         timeout = now + lock_seconds + 2
 
         # return true if we successfully acquired the lock
-        return timeout if Resque.redis.setnx(lock_key, timeout)
+        return timeout if ::ResqueBus.redis.setnx(lock_key, timeout)
 
         # see if the existing timeout is still valid and return false if it is
         # (we cannot acquire the lock during the timeout period)
-        return 0 if now <= Resque.redis.get(lock_key).to_i
+        return 0 if now <= ::ResqueBus.redis.get(lock_key).to_i
 
         # otherwise set the timeout and ensure that no other worker has
         # acquired the lock
-        if now > Resque.redis.getset(lock_key, timeout).to_i
+        if now > ::ResqueBus.redis.getset(lock_key, timeout).to_i
           return timeout
         else
           return 0
@@ -33,7 +33,7 @@ module ResqueBus
       end
       
       def unlock!
-        Resque.redis.del(lock_key)
+        ::ResqueBus.redis.del(lock_key)
       end
       
       
@@ -46,7 +46,7 @@ module ResqueBus
       end
       
       def get_saved_minute!
-        key = ResqueBus.redis.get(redis_key)
+        key = ::ResqueBus.redis.get(redis_key)
         return nil if key.nil?
         case environment_name
         when 'development', 'test'
@@ -58,7 +58,7 @@ module ResqueBus
       end
 
       def set_saved_minute!(epoch_minute)
-        ResqueBus.redis.set(redis_key, epoch_minute)
+        ::ResqueBus.redis.set(redis_key, epoch_minute)
       end
       
       def perform
@@ -94,7 +94,7 @@ module ResqueBus
           attributes["yday"]   = now.yday
           attributes["wday"]   = now.wday
 
-          ResqueBus.publish("heartbeat_minutes", attributes)
+          ::ResqueBus.publish("heartbeat_minutes", attributes)
           set_saved_minute!(minutes)
         end
 

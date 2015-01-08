@@ -4,11 +4,11 @@ module ResqueBus
       raise "Adapter already set to #{@adapter_instance.class.name}" if @adapter_instance
       if val.is_a?(Class)
         @adapter_instance = name_or_klass.new
-      elsif val.is_a?(ResqueBus::Adapters::Base)
+      elsif val.is_a?(::ResqueBus::Adapters::Base)
         @adapter_instance = val
       else
-        class_name = ResqueBus::Util.classify(val)
-        @adapter_instance = ResqueBus::Util.constantize("::ResqueBus::Adapters::#{class_name}").new
+        class_name = ::ResqueBus::Util.classify(val)
+        @adapter_instance = ::ResqueBus::Util.constantize("::ResqueBus::Adapters::#{class_name}").new
       end
       @adapter_instance
     end

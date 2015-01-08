@@ -12,7 +12,7 @@ module ResqueBus
     end
     
     def dispatcher_by_key(app_key)
-      app_key = Application.normalize(app_key || ResqueBus.default_app_key)
+      app_key = Application.normalize(app_key || ::ResqueBus.default_app_key)
       @dispatchers ||= {}
       @dispatchers[app_key] ||= Dispatch.new(app_key)
     end

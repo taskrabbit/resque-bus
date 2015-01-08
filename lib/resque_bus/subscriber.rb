@@ -21,7 +21,8 @@ module ResqueBus
       end
       
       def subscribe(method_name, matcher_hash = nil)
-        queue_name   = ::Resque.queue_from_class(self)
+        queue_name   = nil
+        queue_name ||= self.instance_variable_get(:@queue) || (self.respond_to?(:queue) && self.queue)
         queue_name ||= ::ResqueBus.default_queue
         queue_name ||= "#{app_key}_default"
         subscribe_queue(queue_name, method_name, matcher_hash)
@@ -40,7 +41,7 @@ module ResqueBus
       end
       
       def perform(attributes)
-        ResqueBus.with_global_attributes(attributes) do
+        ::ResqueBus.with_global_attributes(attributes) do
           sub_key = attributes["bus_rider_sub_key"]
           meth_key = sub_key.split(".").last
           resque_bus_execute(meth_key, attributes)

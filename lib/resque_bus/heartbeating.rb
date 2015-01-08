@@ -1,6 +1,8 @@
 module ResqueBus
   module Heartbeating
     def heartbeat!
+      # TODO: have to be moved to adapter
+      
       # turn on the heartbeat
       # should be down after loading scheduler yml if you do that
       # otherwise, anytime
@@ -11,10 +13,10 @@ module ResqueBus
                    'queue' => incoming_queue,
                    'description' => 'I publish a heartbeat_minutes event every minute'
                  }
-      if Resque::Scheduler.dynamic
-        Resque.set_schedule(name, schedule)
+      if ::Resque::Scheduler.dynamic
+        ::Resque.set_schedule(name, schedule)
       end
-      Resque.schedule[name] = schedule
+      ::Resque.schedule[name] = schedule
     end
   end
 end

@@ -10,8 +10,8 @@ module ResqueBus
           attributes = args.first
           event_type = attributes["bus_event_type"]
         end
-        ResqueBus.log_worker("Publisher running: #{event_type} - #{attributes.inspect}")
-        ResqueBus.publish(event_type, attributes)
+        ::ResqueBus.log_worker("Publisher running: #{event_type} - #{attributes.inspect}")
+        ::ResqueBus.publish(event_type, attributes)
       end
     end
 

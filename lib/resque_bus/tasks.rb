@@ -50,8 +50,8 @@ namespace :resquebus do
     require "resque/failure/redis"
     require "resque/failure/multiple_with_retry_suppression"
     
-    Resque::Failure::MultipleWithRetrySuppression.classes = [Resque::Failure::Redis]
-    Resque::Failure.backend = Resque::Failure::MultipleWithRetrySuppression
+    ::Resque::Failure::MultipleWithRetrySuppression.classes = [::Resque::Failure::Redis]
+    ::Resque::Failure.backend = ::Resque::Failure::MultipleWithRetrySuppression
     
     Rake::Task["resque:setup"].invoke # loads the environment and such if defined
   end
@@ -62,15 +62,15 @@ namespace :resquebus do
     desc "Publishes events to example applications"
     task :publish => [ "resquebus:preload", "resquebus:setup" ] do
       which = ["one", "two", "three", "other"][rand(4)]
-      ResqueBus.publish("event_#{which}", { "rand" => rand(99999)})
-      ResqueBus.publish("event_all", { "rand" => rand(99999)})
-      ResqueBus.publish("none_subscribed", { "rand" => rand(99999)})
+      ::ResqueBus.publish("event_#{which}", { "rand" => rand(99999)})
+      ::ResqueBus.publish("event_all", { "rand" => rand(99999)})
+      ::ResqueBus.publish("none_subscribed", { "rand" => rand(99999)})
       puts "published event_#{which}, event_all, none_subscribed"
     end
     
     desc "Sets up an example config"
     task :register => [ "resquebus:preload"] do      
-      ResqueBus.dispatch("example") do
+      ::ResqueBus.dispatch("example") do
         subscribe "event_one" do
           puts "event1 happened"
         end

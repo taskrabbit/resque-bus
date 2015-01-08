@@ -5,7 +5,7 @@ module ResqueBus
     
       def all
         # note the names arent the same as we started with
-        ResqueBus.redis.smembers(app_list_key).collect{ |val| new(val) }
+        ::ResqueBus.redis.smembers(app_list_key).collect{ |val| new(val) }
       end
     end
 
@@ -31,15 +31,15 @@ module ResqueBus
       
       redis_hash = subscription_list.to_redis
       redis_hash.each do |key, hash|
-        ResqueBus.redis.hset(temp_key, key, ResqueBus::Util.encode(hash))
+        ::ResqueBus.redis.hset(temp_key, key, ResqueBus::Util.encode(hash))
       end
       
       # make it the real one
-      ResqueBus.redis.rename(temp_key, redis_key)
-      ResqueBus.redis.sadd(self.class.app_list_key, app_key)
+      ::ResqueBus.redis.rename(temp_key, redis_key)
+      ::ResqueBus.redis.sadd(self.class.app_list_key, app_key)
       
       if log
-        puts ResqueBus.redis.hgetall(redis_key).inspect
+        puts ::ResqueBus.redis.hgetall(redis_key).inspect
       end
       
       true
@@ -47,8 +47,8 @@ module ResqueBus
         
     def unsubscribe
       # TODO: clean up known queues?
-      ResqueBus.redis.srem(self.class.app_list_key, app_key)
-      ResqueBus.redis.del(redis_key)
+      ::ResqueBus.redis.srem(self.class.app_list_key, app_key)
+      ::ResqueBus.redis.del(redis_key)
     end
     
     def no_connect_queue_names_for(subscriptions)
@@ -92,7 +92,7 @@ module ResqueBus
     end
     
     def event_queues
-      ResqueBus.redis.hgetall(redis_key)
+      ::ResqueBus.redis.hgetall(redis_key)
     end
     
     def subscriptions
@@ -101,10 +101,10 @@ module ResqueBus
     
     def read_redis_hash
       out = {}
-      ResqueBus.redis.hgetall(redis_key).each do |key, val|
+      ::ResqueBus.redis.hgetall(redis_key).each do |key, val|
         begin
-          out[key] = ResqueBus::Util.decode(val)
-        rescue ResqueBus::Util::DecodeException
+          out[key] = ::ResqueBus::Util.decode(val)
+        rescue ::ResqueBus::Util::DecodeException
           out[key] = val
         end
       end
