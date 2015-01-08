@@ -19,7 +19,7 @@ module ResqueBus
       end
 
       def enqueue(queue_name, klass, hash)
-        # enqueue the given class (Driver) in your queue
+        # enqueue the given class (Driver/Rider) in your queue
         raise NotImplementedError
       end
 
