@@ -1,6 +1,6 @@
 module ResqueBus
   # fans out an event to multiple queues
-  class Driver
+  class Driver < ::ResqueBus::Worker
 
     class << self
       def subscription_matches(attributes)

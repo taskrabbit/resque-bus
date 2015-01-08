@@ -2,7 +2,7 @@ require 'resque-retry'
 
 module ResqueBus
   # queue'd in each
-  class Rider
+  class Rider < ::ResqueBus::Worker
     extend ::Resque::Plugins::ExponentialBackoff
     
     class << self

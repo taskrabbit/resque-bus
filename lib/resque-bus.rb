@@ -19,6 +19,7 @@ module ResqueBus
   autoload :SubscriptionList, 'resque_bus/subscription_list'
   autoload :TaskManager,      'resque_bus/task_manager'
   autoload :Util,             'resque_bus/util'
+  autoload :Worker,           'resque_bus/worker'
 
   module Adapters
     autoload :Base,           'resque_bus/adapters/base'

@@ -1,9 +1,10 @@
 module ResqueBus
   # publishes on a delay
-  class Publisher
+  class Publisher < ::ResqueBus::Worker
     class << self
       def perform(*args)
         if args.size > 1
+          # handles older arguments
           event_type = args.first
           attributes = args.last
         else

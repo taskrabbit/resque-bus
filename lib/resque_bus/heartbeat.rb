@@ -1,6 +1,6 @@
 module ResqueBus
   # publishes event about the current time
-  class Heartbeat
+  class Heartbeat < ::ResqueBus::Worker
 
     class << self
       
