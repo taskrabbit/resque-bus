@@ -8,7 +8,6 @@ module ResqueBus
   autoload :Dispatchers,      'resque_bus/dispatchers'
   autoload :Driver,           'resque_bus/driver'
   autoload :Heartbeat,        'resque_bus/heartbeat'
-  autoload :Heartbeating,     'resque_bus/heartbeating'
   autoload :Local,            'resque_bus/local'
   autoload :Matcher,          'resque_bus/matcher'
   autoload :Publishing,       'resque_bus/publishing'
@@ -29,7 +28,6 @@ module ResqueBus
   class << self
 
     include Publishing
-    include Heartbeating
     extend Forwardable
 
     def_delegators :config, :default_app_key=, :default_app_key,

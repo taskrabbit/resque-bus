@@ -21,6 +21,22 @@ module ResqueBus
         ::Resque.enqueue_at_with_queue(queue_name, epoch_seconds, klass, hash)
       end
 
+      def setup_heartbeat!(queue_name)
+        # turn on the heartbeat
+        # should be down after loading scheduler yml if you do that
+        # otherwise, anytime
+        name     = 'resquebus_hearbeat'
+        schedule = { 'class' => '::ResqueBus::Heartbeat',
+                     'cron'  => '* * * * *',   # every minute
+                     'queue' => queue_name,
+                     'description' => 'I publish a heartbeat_minutes event every minute'
+                   }
+        if ::Resque::Scheduler.dynamic
+          ::Resque.set_schedule(name, schedule)
+        end
+        ::Resque.schedule[name] = schedule
+      end
+
       private
 
       def load_retry

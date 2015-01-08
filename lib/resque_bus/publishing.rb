@@ -72,6 +72,10 @@ module ResqueBus
       ::ResqueBus.adapter.enqueue_at(epoch_seconds, queue_name, klass, hash)
     end
 
+    def heartbeat!
+      ::ResqueBus.adapter.setup_heartbeat!(incoming_queue)
+    end
+
     def incoming_queue
       "resquebus_incoming"
     end

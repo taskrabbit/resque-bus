@@ -27,6 +27,11 @@ module ResqueBus
         # enqueue the given class (Publisher) in your queue to run at given time
         raise NotImplementedError
       end
+
+      def setup_heartbeat!
+        # if possible, tell a recurring job system to publish every minute
+        raise NotImplementedError
+      end
     end
   end
 end
