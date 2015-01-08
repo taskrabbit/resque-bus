@@ -4,6 +4,9 @@ module ResqueBus
       def enabled!
         # know we are using it
         require 'resque'
+
+        # if they have retry, use that
+        load_retry
       end
 
       def redis
@@ -19,10 +22,40 @@ module ResqueBus
         delayed_push(epoch_seconds, item)
       end
 
-
       def enqueue_to(queue, klass, *args)
         push(queue, :class => klass.to_s, :args => args)
       end
+
+
+      private
+
+      def load_retry
+        require 'resque-retry'
+        ::ResqueBus::Rider.extend(::Resque::Plugins::ExponentialBackoff)
+        ::ResqueBus::Rider.extend(::ResqueBus::Adapters::Resque::RetryHandlers)
+      rescue LoadError
+        # nevermind
+      end
+
+      module RetryHandlers
+        # @failure_hooks_already_ran on https://github.com/defunkt/resque/tree/1-x-stable
+        # to prevent running twice
+        def queue
+          @my_queue
+        end
+        
+        def on_failure_aaa(exception, *args)
+          # note: sorted alphabetically
+          # queue needs to be set for rety to work (know what queue in Requeue.class_to_queue)
+          @my_queue = args[0]["bus_rider_queue"]
+        end
+        
+        def on_failure_zzz(exception, *args)
+          # note: sorted alphabetically
+          @my_queue = nil
+        end
+      end
+
 
 
 
