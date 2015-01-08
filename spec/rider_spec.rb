@@ -20,6 +20,12 @@ module ResqueBus
     end
     
     it "should set the timezone and locale if present" do
+      ResqueBus.dispatch("r1") do
+        subscribe "event_name" do |attributes|
+          Runner1.run(attributes)
+        end
+      end
+      
       defined?(I18n).should be_nil
       Time.respond_to?(:zone).should be_false
 
