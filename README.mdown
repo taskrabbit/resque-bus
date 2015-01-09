@@ -224,6 +224,7 @@ This can be helpful inside some sort of migration, for example.
 ### TODO
 
 * Sidekiq adapter
+* Refactor rake tasks for resque/sidekiq
 * Refactor to a storage adapter for Redis, so we can store subscription info in MySQL or something else
 * Replace local modes with adapters
 * There are a few spots in the code with TODO notes
