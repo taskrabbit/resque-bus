@@ -9,8 +9,8 @@ module ResqueBus
         load_retry
       end
 
-      def redis
-        ::Resque.redis
+      def redis(&block)
+        block.call(::Resque.redis)
       end
 
       def enqueue(queue_name, klass, hash)
@@ -59,13 +59,13 @@ module ResqueBus
         def queue
           @my_queue
         end
-        
+
         def on_failure_aaa(exception, *args)
           # note: sorted alphabetically
           # queue needs to be set for rety to work (know what queue in Requeue.class_to_queue)
           @my_queue = args[0]["bus_rider_queue"]
         end
-        
+
         def on_failure_zzz(exception, *args)
           # note: sorted alphabetically
           @my_queue = nil

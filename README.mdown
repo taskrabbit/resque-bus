@@ -38,7 +38,7 @@ ResqueBus.dispatch("app_b") do
   subscribe "user_created" do |attributes|
     NameCount.find_or_create_by_name(attributes["last_name"]).increment!
   end
-  
+
   # processes event on app_b_critical queue
   # critical is short-hand to subscribe to your 'critical' queue and this block with process events with the name "user_paid"
   critical "user_paid" do |attributes|
@@ -46,13 +46,13 @@ ResqueBus.dispatch("app_b") do
   end
 
   # you can pass any queue name you would like to process from as well IE: `banana "peeled" do |attributes|`
-  
+
   # and regexes work as well. note that with the above configuration along with this regex,
   # the following as well as the corresponding block above would both be executed
   subscribe /^user_/ do |attributes|
     Metrics.record_user_action(attributes["bus_event_type"], attributes["id"])
   end
-  
+
   # the above all filter on just the event_type, but you can filter on anything
   # this would be _any_ event that has a user_id and the page value of homepage regardless of bus_event_type
   subscribe "my_key", { "user_id" => :present, "page" => "homepage"} do
@@ -61,7 +61,7 @@ ResqueBus.dispatch("app_b") do
 end
 ```
 
-Applications can also subscribe within classes using the provided `Subscriber` module. 
+Applications can also subscribe within classes using the provided `Subscriber` module.
 
 ```ruby
 class SimpleSubscriber
@@ -115,14 +115,42 @@ Each app needs to tell Redis about its subscriptions:
 The subscription block is run inside a Resque worker which needs to be started for each app.
 
     $ rake resquebus:setup resque:work
-    
+
 The incoming queue also needs to be processed on a dedicated or all the app servers.
 
     $ rake resquebus:driver resque:work
-    
+
 If you want retry to work for subscribing apps, you should run resque-scheduler
-    
+
     $ rake resque:scheduler
+
+### Adapters
+
+ResqueBus now supports multiple adapters! By default ResqueBus uses Resque but you can now configure your application to use Sidekiq to drive and subscribe the bus.
+
+First be sure to configure ResqueBus to use Sidekiq early in your applications' initialization cycle:
+```
+ResqueBus.adapter = 'Sidekiq'
+```
+You will be responsible for setting up the queues for your Sidekiq clients however you can get the appropriate queue names with the following tasks:
+For driving applications:
+```
+$ rake resquebus:driver:sidekiq
+```
+For subscribing applications:
+```
+$ rake resquebus:setup:sidekiq
+```
+These tasks will provide the queue_names and some minimal suggestions for starting the client.
+
+Your subscribing applications will still need to also use the appropriate rake task:
+```
+$ rake resquebus:subscribe:sidekiq
+```
+
+At the moment you are expected to include the Sidekiq gem in your own applications.
+
+And yes we are planning on renaming and restructuring the project! Please contact the maintainer if you would like to add a different adapter.
 
 ### Heartbeat
 
@@ -184,13 +212,13 @@ ResqueBus.dispatch("app_c") do
   subscribe "once_an_hour", 'bus_event_type' => 'heartbeat_minutes', 'minute' => 20 do |attributes|
     Sitemap.generate!
   end
-  
+
   # runs every five minutes
   subscribe "every_five_minutes", 'bus_event_type' => 'heartbeat_minutes' do |attributes|
     next unless attributes["epoch_minutes"] % 5 == 0
     HealthCheck.run!
   end
-  
+
   # runs at 8am on the first of every month
   subscribe "new_month_morning", 'bus_event_type' => 'heartbeat_minutes', 'day' => 1, hour' => 8, 'minute' => 0,  do |attributes|
     next unless attributes["epoch_minutes"] % 5 == 0
@@ -206,17 +234,17 @@ For development, a local mode is provided and is specified in the configuration.
 ```ruby
 # config
 ResqueBus.local_mode = :standalone
-or 
+or
 ResqueBus.local_mode = :inline
 ```
 
 Standalone mode does not require a separate resquebus:driver task to be running to process the
-incoming queue. Simply publishing to the bus will distribute the incoming events 
-to the appropriate application specific queue.  A separate resquebus:work task does 
+incoming queue. Simply publishing to the bus will distribute the incoming events
+to the appropriate application specific queue.  A separate resquebus:work task does
 still need to be run to process these events
 
 Inline mode skips queue processing entirely and directly dispatches the
-event to the appropriate code block. 
+event to the appropriate code block.
 
 You can also say `ResqueBus.local_mode = :suppress` to turn off publishing altogether.
 This can be helpful inside some sort of migration, for example.
@@ -232,5 +260,5 @@ This can be helpful inside some sort of migration, for example.
 * We might not actually need to publish in tests
 * Add some rspec helpers for the apps to use: should_ post an event_publish or something along those lines
 * Allow calling resquebus:setup and resquebus:driver together (append to ENV['QUEUES'], don't replace it)
-    
+
 Copyright (c) 2011 Brian Leonard, released under the MIT license

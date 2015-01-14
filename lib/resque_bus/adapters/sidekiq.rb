@@ -6,11 +6,11 @@ module ResqueBus
         require 'sidekiq'
 
         # mix into all the workers
-        ::ResqueBus::Worker.send(:include, Sidekiq::Worker)
+        ::ResqueBus::Worker.send(:include, ::Sidekiq::Worker)
       end
 
-      def redis
-        ::Sidekiq.redis_pool
+      def redis(&block)
+        ::Sidekiq.redis(&block)
       end
 
       def enqueue(queue_name, klass, hash)
@@ -24,6 +24,10 @@ module ResqueBus
       def setup_heartbeat!(queue_name)
         # TODO: not sure how to do this or what is means to set this up in Sidekiq
         raise NotImplementedError
+      end
+
+      def subscriber_includes(base)
+        base.include ::Sidekiq::Worker
       end
     end
   end

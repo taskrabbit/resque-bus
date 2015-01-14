@@ -19,23 +19,23 @@ module ResqueBus
       @adapter_instance
     end
 
-    def redis
+    def redis(&block)
       # TODO: could allow setting for non-redis adapters
-      adapter.redis
+      adapter.redis(&block)
     end
 
     def default_app_key=val
       @default_app_key = Application.normalize(val)
     end
-    
+
     def default_app_key
       @default_app_key
     end
-    
+
     def default_queue=val
       @default_queue = val
     end
-    
+
     def default_queue
       @default_queue
     end
@@ -69,18 +69,18 @@ module ResqueBus
     def logger
       @logger
     end
-    
+
     def logger=val
       @logger = val
     end
-    
+
     def log_application(message)
       if logger
         time = Time.now.strftime('%H:%M:%S %Y-%m-%d')
         logger.info("** [#{time}] #$$: ResqueBus #{message}")
       end
     end
-    
+
     def log_worker(message)
       if ENV['LOGGING'] || ENV['VERBOSE'] || ENV['VVERBOSE']
         time = Time.now.strftime('%H:%M:%S %Y-%m-%d')

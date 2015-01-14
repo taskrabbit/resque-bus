@@ -45,7 +45,7 @@ describe "ResqueBus config" do
 
 
   it "should use the default Resque connection" do
-    ResqueBus.redis.should == Resque.redis
+    ResqueBus.redis { |redis| redis }.should == Resque.redis
   end
 
   it "should default to resque adapter" do
