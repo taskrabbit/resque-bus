@@ -1,7 +1,7 @@
 require "resque_bus/version"
 
 module ResqueBus
-  
+
   autoload :Application,      'resque_bus/application'
   autoload :Config,           'resque_bus/config'
   autoload :Dispatch,         'resque_bus/dispatch'
@@ -23,6 +23,7 @@ module ResqueBus
   module Adapters
     autoload :Base,           'resque_bus/adapters/base'
     autoload :Resque,         'resque_bus/adapters/resque'
+    autoload :Sidekiq,        'resque_bus/adapters/sidekiq'
   end
 
   class << self
@@ -40,9 +41,9 @@ module ResqueBus
                             :redis
 
     def_delegators :_dispatchers, :dispatch, :dispatchers, :dispatcher_by_key, :dispatcher_execute
-    
+
     protected
-    
+
     def reset
       # used by tests
       @config = nil
@@ -57,5 +58,5 @@ module ResqueBus
       @_dispatchers ||= ::ResqueBus::Dispatchers.new
     end
   end
-  
+
 end

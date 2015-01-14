@@ -2,7 +2,7 @@ module ResqueBus
   module Adapters
     class Base
       # adapters need to define the NonImplemented methods in this class
-      
+
       def initialize
         enabled!
       end
@@ -31,6 +31,11 @@ module ResqueBus
       def setup_heartbeat!
         # if possible, tell a recurring job system to publish every minute
         raise NotImplementedError
+      end
+
+      def subscriber_includes(base)
+        # optional method for including more modules in classes that
+        # include ::ResqueBus::Subscriber
       end
     end
   end

@@ -1,5 +1,6 @@
 require 'timecop'
 require 'resque-bus'
+require 'resque'
 require 'resque/scheduler'
 
 module ResqueBus
@@ -7,26 +8,26 @@ module ResqueBus
     def self.value
       @value ||= 0
     end
-    
+
     def self.attributes
       @attributes
     end
-    
+
     def self.run(attrs)
       @value ||= 0
       @value += 1
       @attributes = attrs
     end
-    
+
     def self.reset
       @value = nil
       @attributes = nil
     end
   end
-  
+
   class Runner1 < Runner
   end
-  
+
   class Runner2 < Runner
   end
 end
@@ -54,13 +55,13 @@ Resque::Scheduler.mute = true
 
 RSpec.configure do |config|
   config.mock_framework = :rspec
-  
+
   config.before(:each) do
     ResqueBus.send(:reset)
   end
   config.after(:each) do
     begin
-      ResqueBus.redis.flushall
+      ResqueBus.redis { |redis| redis.flushall }
     rescue
     end
     ResqueBus.send(:reset)

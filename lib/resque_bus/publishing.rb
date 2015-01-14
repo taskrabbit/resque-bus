@@ -1,14 +1,17 @@
 module ResqueBus
   module Publishing
+
+    INCOMING_QUEUE = "resquebus_incoming"
+
     def with_global_attributes(attributes)
       original_timezone = false
       original_locale   = false
-      
+
       if attributes["bus_locale"] && defined?(I18n) && I18n.respond_to?(:locale=)
         original_locale = I18n.locale if I18n.respond_to?(:locale)
         I18n.locale = attributes["bus_locale"]
       end
-      
+
       if attributes["bus_timezone"] && defined?(Time) && Time.respond_to?(:zone=)
         original_timezone = Time.zone if Time.respond_to?(:zone)
         Time.zone = attributes["bus_timezone"]
@@ -19,7 +22,7 @@ module ResqueBus
       I18n.locale = original_locale   unless original_locale   == false
       Time.zone   = original_timezone unless original_timezone == false
     end
-    
+
     def publish_metadata(event_type, attributes={})
       # TODO: "bus_app_key" => application.app_key ?
       bus_attr = {"bus_published_at" => Time.now.to_i, "bus_event_type" => event_type}
@@ -31,11 +34,11 @@ module ResqueBus
       ::ResqueBus.before_publish_callback(out)
       out
     end
-    
+
     def generate_uuid
       require 'securerandom' unless defined?(SecureRandom)
       return SecureRandom.uuid
-      
+
       rescue Exception => e
         # secure random not there
         # big random number a few times
@@ -44,7 +47,7 @@ module ResqueBus
         max = 2 ** (n_bits - 2) - 1
         return "#{rand(max)}-#{rand(max)}-#{rand(max)}"
     end
-    
+
     def publish(event_type, attributes = {})
       to_publish = publish_metadata(event_type, attributes)
       ::ResqueBus.log_application("Event published: #{event_type} #{to_publish.inspect}")
@@ -54,12 +57,12 @@ module ResqueBus
         enqueue_to(incoming_queue, Driver, to_publish)
       end
     end
-    
+
     def publish_at(timestamp_or_epoch, event_type, attributes = {})
       to_publish = publish_metadata(event_type, attributes)
       to_publish["bus_delayed_until"] ||= timestamp_or_epoch.to_i
       to_publish.delete("bus_published_at") unless attributes["bus_published_at"] # will be put on when it actually does it
-      
+
       ::ResqueBus.log_application("Event published:#{event_type} #{to_publish.inspect} publish_at: #{timestamp_or_epoch.to_i}")
       delayed_enqueue_to(timestamp_or_epoch.to_i, incoming_queue, Publisher, to_publish)
     end
@@ -77,7 +80,7 @@ module ResqueBus
     end
 
     def incoming_queue
-      "resquebus_incoming"
+      INCOMING_QUEUE
     end
   end
 end
