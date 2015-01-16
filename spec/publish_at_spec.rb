@@ -18,7 +18,7 @@ describe "Publishing an event in the future" do
   let(:future) { Time.at(now.to_i + 60) }
   let(:worktime) {Time.at(future.to_i + 1)}
 
-  it "should add it to Redis" do
+  it "should add it to Redis then to the real queue" do
     hash = {:one => 1, "two" => "here", "id" => 12 }
     event_name = "event_name"
     QueueBus.publish_at(future, event_name, hash)
@@ -32,43 +32,17 @@ describe "Publishing an event in the future" do
     hash["class"].should == "QueueBus::Publisher"
     hash["args"].should == [ {"bus_event_type"=>"event_name", "two"=>"here", "one"=>1, "id" => 12}.merge(delayed_attrs) ]
     hash["queue"].should == "bus_incoming"
-  end
-
-  it "should move it to the real queue when processing" do
-    hash = {:one => 1, "two" => "here", "id" => 12 }
-    event_name = "event_name"
-
-    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
-    val.should == nil
-
-    QueueBus.publish_at(future, event_name, hash)
 
     val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     val.should == nil # nothing really added
 
-    # process sceduler now
-    Resque::Scheduler.handle_delayed_items
+    Timecop.freeze(worktime)
+    QueueBus::Publisher.perform(*hash["args"])
 
     val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
-    val.should == nil # nothing added yet
-
-    # process scheduler in future
-    Timecop.freeze(worktime) do
-      Resque::Scheduler.handle_delayed_items
-
-      # added
-      val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
-      hash = JSON.parse(val)
-      hash["class"].should == "QueueBus::Publisher"
-      hash["args"].should == [ {"bus_event_type"=>"event_name", "two"=>"here", "one"=>1, "id" => 12}.merge(delayed_attrs) ]
-
-     QueueBus::Publisher.perform(*hash["args"])
-
-     val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
-     hash = JSON.parse(val)
-     hash["class"].should == "QueueBus::Driver"
-     hash["args"].should == [ {"bus_event_type"=>"event_name", "two"=>"here", "one"=>1, "id" => 12}.merge(bus_attrs) ]
-    end
+    hash = JSON.parse(val)
+    hash["class"].should == "QueueBus::Driver"
+    hash["args"].should == [ {"bus_event_type"=>"event_name", "two"=>"here", "one"=>1, "id" => 12}.merge(bus_attrs) ]
   end
 
 end

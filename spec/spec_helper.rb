@@ -1,7 +1,6 @@
 require 'timecop'
-require 'resque-bus'
-require 'resque'
-require 'resque/scheduler'
+require 'queue-bus'
+require 'adapter/support'
 
 module QueueBus
   class Runner
@@ -32,12 +31,6 @@ module QueueBus
   end
 end
 
-def perform_next_job(worker, &block)
-  return unless job = @worker.reserve
-  @worker.perform(job, &block)
-  @worker.done_working
-end
-
 def test_sub(event_name, queue="default")
   matcher = {"bus_event_type" => event_name}
   QueueBus::Subscription.new(queue, event_name, "::QueueBus::Rider", matcher, nil)
@@ -50,14 +43,6 @@ def test_list(*args)
   end
   out
 end
-
-# Resque::Scheduler.mute = true
-
-def reset_test_adapter
-  QueueBus.send(:reset)
-  QueueBus.adapter = QueueBus::Adapters::Resque.new
-end
-
 
 RSpec.configure do |config|
   config.mock_framework = :rspec
