@@ -3,7 +3,7 @@ require 'resque-bus'
 require 'resque'
 require 'resque/scheduler'
 
-module ResqueBus
+module QueueBus
   class Runner
     def self.value
       @value ||= 0
@@ -40,32 +40,38 @@ end
 
 def test_sub(event_name, queue="default")
   matcher = {"bus_event_type" => event_name}
-  ResqueBus::Subscription.new(queue, event_name, "::ResqueBus::Rider", matcher, nil)
+  QueueBus::Subscription.new(queue, event_name, "::QueueBus::Rider", matcher, nil)
 end
 
 def test_list(*args)
-  out = ResqueBus::SubscriptionList.new
+  out = QueueBus::SubscriptionList.new
   args.each do |sub|
     out.add(sub)
   end
   out
 end
 
-Resque::Scheduler.mute = true
+# Resque::Scheduler.mute = true
+
+def reset_test_adapter
+  QueueBus.send(:reset)
+  QueueBus.adapter = QueueBus::Adapters::Resque.new
+end
+
 
 RSpec.configure do |config|
   config.mock_framework = :rspec
 
   config.before(:each) do
-    ResqueBus.send(:reset)
+    reset_test_adapter
   end
   config.after(:each) do
     begin
-      ResqueBus.redis { |redis| redis.flushall }
+      QueueBus.redis { |redis| redis.flushall }
     rescue
     end
-    ResqueBus.send(:reset)
-    ResqueBus::Runner1.reset
-    ResqueBus::Runner2.reset
+    QueueBus.send(:reset)
+    QueueBus::Runner1.reset
+    QueueBus::Runner2.reset
   end
 end

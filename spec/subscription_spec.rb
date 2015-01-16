@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module ResqueBus
+module QueueBus
   describe Subscription do
     it "should normalize the queue name" do
       Subscription.new("test",  "my_event", "MyClass", {}, nil).queue_name.should == "test"

@@ -1,11 +1,16 @@
 require 'spec_helper'
 
-module ResqueBus
+module QueueBus
   describe Adapters::Resque do
     it "should call it's enabled! method on init" do
-      ResqueBus::Adapters::Resque.any_instance.should_receive(:enabled!)
-      instance = ResqueBus::Adapters::Resque.new
-      ResqueBus.adapter = instance # prevents making a new one and causing and error in :after
+      QueueBus.send(:reset)
+      QueueBus::Adapters::Resque.any_instance.should_receive(:enabled!)
+      instance = QueueBus::Adapters::Resque.new
+      QueueBus.adapter = instance # prevents making a new one and causing and error in :after
+    end
+
+    it "should be defaulting to Resque from spec_helper" do
+      QueueBus.adapter.is_a?(QueueBus::Adapters::Resque).should == true
     end
   end
 end

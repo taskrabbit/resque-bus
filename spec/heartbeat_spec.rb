@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module ResqueBus
+module QueueBus
   describe Heartbeat do
     def now_attributes
       {
@@ -20,7 +20,7 @@ module ResqueBus
     
     it "should publish the current time once" do
       Timecop.freeze "12/12/2013 12:01:19" do
-        ResqueBus.should_receive(:publish).with("heartbeat_minutes", now_attributes)
+        QueueBus.should_receive(:publish).with("heartbeat_minutes", now_attributes)
         Heartbeat.perform
       end
       
@@ -31,12 +31,12 @@ module ResqueBus
     
     it "should publish a minute later" do
       Timecop.freeze "12/12/2013 12:01:19" do
-        ResqueBus.should_receive(:publish).with("heartbeat_minutes", now_attributes)
+        QueueBus.should_receive(:publish).with("heartbeat_minutes", now_attributes)
         Heartbeat.perform
       end
       
       Timecop.freeze "12/12/2013 12:02:01" do
-        ResqueBus.should_receive(:publish).with("heartbeat_minutes", now_attributes)
+        QueueBus.should_receive(:publish).with("heartbeat_minutes", now_attributes)
         Heartbeat.perform
       end
     end

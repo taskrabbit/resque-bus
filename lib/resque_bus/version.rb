@@ -1,5 +1,3 @@
-module Resque
-  module Bus
-    VERSION = "0.3.5"
-  end
+module ResqueBus
+  VERSION = "0.3.5"
 end

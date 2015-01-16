@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module ResqueBus
+module QueueBus
   describe "Integration" do
     it "should round trip attributes" do      
       write1 = Subscription.new("default", "key1", "MyClass1", {"bus_event_type" => "event_one"})
@@ -23,7 +23,7 @@ module ResqueBus
       app = Application.new("test")
       app.subscribe(write)
     
-      ResqueBus.send(:reset)  # reset to make sure we read from redis
+      reset_test_adapter  # reset to make sure we read from redis
       app = Application.new("test")
       read = app.send(:subscriptions)
     

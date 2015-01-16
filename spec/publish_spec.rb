@@ -4,7 +4,7 @@ describe "Publishing an event" do
 
   before(:each) do
     Timecop.freeze
-    ResqueBus.stub(:generate_uuid).and_return("idfhlkj")
+    QueueBus.stub(:generate_uuid).and_return("idfhlkj")
   end
   after(:each) do
     Timecop.return
@@ -17,14 +17,14 @@ describe "Publishing an event" do
     hash = {:one => 1, "two" => "here", "id" => 12 }
     event_name = "event_name"
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     val.should == nil
 
-    ResqueBus.publish(event_name, hash)
+    QueueBus.publish(event_name, hash)
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     hash = JSON.parse(val)
-    hash["class"].should == "ResqueBus::Driver"
+    hash["class"].should == "QueueBus::Driver"
     hash["args"].should == [ {"bus_event_type" => event_name, "two"=>"here", "one"=>1, "id" => 12}.merge(bus_attrs) ]
 
   end
@@ -33,20 +33,20 @@ describe "Publishing an event" do
     hash = {:one => 1, "two" => "here", "bus_id" => "app-given" }
     event_name = "event_name"
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     val.should == nil
 
-    ResqueBus.publish(event_name, hash)
+    QueueBus.publish(event_name, hash)
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     hash = JSON.parse(val)
-    hash["class"].should == "ResqueBus::Driver"
+    hash["class"].should == "QueueBus::Driver"
     hash["args"].should == [ {"bus_event_type" => event_name, "two"=>"here", "one"=>1}.merge(bus_attrs).merge("bus_id" => 'app-given') ]
   end
 
   it "should add metadata via callback" do
     myval = 0
-    ResqueBus.before_publish = lambda { |att|
+    QueueBus.before_publish = lambda { |att|
       att["mine"] = 4
       myval += 1
     }
@@ -54,13 +54,13 @@ describe "Publishing an event" do
     hash = {:one => 1, "two" => "here", "bus_id" => "app-given" }
     event_name = "event_name"
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     val.should == nil
 
-    ResqueBus.publish(event_name, hash)
+    QueueBus.publish(event_name, hash)
 
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     hash = JSON.parse(val)
     att = hash["args"].first
     att["mine"].should == 4
@@ -79,14 +79,14 @@ describe "Publishing an event" do
     hash = {:one => 1, "two" => "here", "bus_id" => "app-given" }
     event_name = "event_name"
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     val.should == nil
 
-    ResqueBus.publish(event_name, hash)
+    QueueBus.publish(event_name, hash)
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     hash = JSON.parse(val)
-    hash["class"].should == "ResqueBus::Driver"
+    hash["class"].should == "QueueBus::Driver"
     att = hash["args"].first
     att["bus_locale"].should == "jp"
     att["bus_timezone"].should == "EST"

@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-module ResqueBus
+module QueueBus
   describe SubscriptionList do
     describe ".from_redis" do
       it "should return from attributes" do

@@ -4,7 +4,7 @@ describe "Publishing an event in the future" do
 
   before(:each) do
     Timecop.freeze(now)
-    ResqueBus.stub(:generate_uuid).and_return("idfhlkj")
+    QueueBus.stub(:generate_uuid).and_return("idfhlkj")
   end
   after(:each) do
     Timecop.return
@@ -21,35 +21,35 @@ describe "Publishing an event in the future" do
   it "should add it to Redis" do
     hash = {:one => 1, "two" => "here", "id" => 12 }
     event_name = "event_name"
-    ResqueBus.publish_at(future, event_name, hash)
+    QueueBus.publish_at(future, event_name, hash)
 
-    schedule = ResqueBus.redis { |redis| redis.zrange("delayed_queue_schedule", 0, 1) }
+    schedule = QueueBus.redis { |redis| redis.zrange("delayed_queue_schedule", 0, 1) }
     schedule.should == [future.to_i.to_s]
 
-    val = ResqueBus.redis { |redis| redis.lpop("delayed:#{future.to_i}") }
+    val = QueueBus.redis { |redis| redis.lpop("delayed:#{future.to_i}") }
     hash = JSON.parse(val)
 
-    hash["class"].should == "ResqueBus::Publisher"
+    hash["class"].should == "QueueBus::Publisher"
     hash["args"].should == [ {"bus_event_type"=>"event_name", "two"=>"here", "one"=>1, "id" => 12}.merge(delayed_attrs) ]
-    hash["queue"].should == "resquebus_incoming"
+    hash["queue"].should == "bus_incoming"
   end
 
   it "should move it to the real queue when processing" do
     hash = {:one => 1, "two" => "here", "id" => 12 }
     event_name = "event_name"
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     val.should == nil
 
-    ResqueBus.publish_at(future, event_name, hash)
+    QueueBus.publish_at(future, event_name, hash)
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     val.should == nil # nothing really added
 
     # process sceduler now
     Resque::Scheduler.handle_delayed_items
 
-    val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+    val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
     val.should == nil # nothing added yet
 
     # process scheduler in future
@@ -57,16 +57,16 @@ describe "Publishing an event in the future" do
       Resque::Scheduler.handle_delayed_items
 
       # added
-      val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+      val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
       hash = JSON.parse(val)
-      hash["class"].should == "ResqueBus::Publisher"
+      hash["class"].should == "QueueBus::Publisher"
       hash["args"].should == [ {"bus_event_type"=>"event_name", "two"=>"here", "one"=>1, "id" => 12}.merge(delayed_attrs) ]
 
-     ResqueBus::Publisher.perform(*hash["args"])
+     QueueBus::Publisher.perform(*hash["args"])
 
-     val = ResqueBus.redis { |redis| redis.lpop("queue:resquebus_incoming") }
+     val = QueueBus.redis { |redis| redis.lpop("queue:bus_incoming") }
      hash = JSON.parse(val)
-     hash["class"].should == "ResqueBus::Driver"
+     hash["class"].should == "QueueBus::Driver"
      hash["args"].should == [ {"bus_event_type"=>"event_name", "two"=>"here", "one"=>1, "id" => 12}.merge(bus_attrs) ]
     end
   end

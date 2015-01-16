@@ -1,12 +1,12 @@
 require 'spec_helper'
 
-  describe ResqueBus::Subscriber do
+  describe QueueBus::Subscriber do
     let(:attributes) { {"x" => "y"} }
     let(:bus_attrs) { {"bus_driven_at" => Time.now.to_i} }
 
     before(:each) do
       class SubscriberTest1
-        include ResqueBus::Subscriber
+        include QueueBus::Subscriber
         @queue = "myqueue"
 
         application :my_thing
@@ -14,16 +14,16 @@ require 'spec_helper'
         subscribe :event_sub
 
         def event_sub(attributes)
-          ResqueBus::Runner1.run(attributes)
+          QueueBus::Runner1.run(attributes)
         end
 
         def thing_filter(attributes)
-          ResqueBus::Runner2.run(attributes)
+          QueueBus::Runner2.run(attributes)
         end
       end
 
       class SubscriberTest2
-        include ResqueBus::Subscriber
+        include QueueBus::Subscriber
         application :test2
         subscribe :test2,  "value" => :present
         transform :make_an_int
@@ -33,36 +33,36 @@ require 'spec_helper'
         end
 
         def test2(int)
-          ResqueBus::Runner1.run("transformed"=>int)
+          QueueBus::Runner1.run("transformed"=>int)
         end
       end
 
       module SubModule
         class SubscriberTest3
-          include ResqueBus::Subscriber
+          include QueueBus::Subscriber
 
           subscribe_queue :sub_queue1, :test3, :bus_event_type => "the_event"
           subscribe_queue :sub_queue2, :the_event
           subscribe :other, :bus_event_type => "other_event"
 
           def test3(attributes)
-            ResqueBus::Runner1.run(attributes)
+            QueueBus::Runner1.run(attributes)
           end
 
           def the_event(attributes)
-            ResqueBus::Runner2.run(attributes)
+            QueueBus::Runner2.run(attributes)
           end
         end
 
         class SubscriberTest4
-          include ResqueBus::Subscriber
+          include QueueBus::Subscriber
 
           subscribe_queue :sub_queue1, :test4
         end
       end
 
       Timecop.freeze
-      ResqueBus::TaskManager.new(false).subscribe!
+      QueueBus::TaskManager.new(false).subscribe!
     end
 
     after(:each) do
@@ -76,7 +76,7 @@ require 'spec_helper'
     end
 
     it "should be able to transform the attributes" do
-      dispatcher = ResqueBus.dispatcher_by_key("test2")
+      dispatcher = QueueBus.dispatcher_by_key("test2")
       all = dispatcher.subscriptions.all
       all.size.should == 1
 
@@ -86,41 +86,41 @@ require 'spec_helper'
       sub.key.should == "SubscriberTest2.test2"
       sub.matcher.filters.should == {"value"=>"bus_special_value_present"}
 
-      ResqueBus::Driver.perform(attributes.merge("bus_event_type" => "something2", "value"=>"nice"))
+      QueueBus::Driver.perform(attributes.merge("bus_event_type" => "something2", "value"=>"nice"))
 
-      hash = JSON.parse(ResqueBus.redis { |redis| redis.lpop("queue:test2_default") })
+      hash = JSON.parse(QueueBus.redis { |redis| redis.lpop("queue:test2_default") })
       hash["class"].should == "SubscriberTest2"
       hash["args"].should eq [ {"bus_rider_app_key"=>"test2", "bus_rider_sub_key"=>"SubscriberTest2.test2", "bus_rider_queue" => "test2_default", "bus_rider_class_name"=>"SubscriberTest2",
                                "bus_event_type" => "something2", "value"=>"nice", "x"=>"y"}.merge(bus_attrs) ]
 
-      ResqueBus::Runner1.value.should == 0
-      ResqueBus::Runner2.value.should == 0
-      ResqueBus::Util.constantize(hash["class"]).perform(*hash["args"])
-      ResqueBus::Runner1.value.should == 1
-      ResqueBus::Runner2.value.should == 0
+      QueueBus::Runner1.value.should == 0
+      QueueBus::Runner2.value.should == 0
+      QueueBus::Util.constantize(hash["class"]).perform(*hash["args"])
+      QueueBus::Runner1.value.should == 1
+      QueueBus::Runner2.value.should == 0
 
-      ResqueBus::Runner1.attributes.should == {"transformed" => 4}
+      QueueBus::Runner1.attributes.should == {"transformed" => 4}
 
 
-      ResqueBus::Driver.perform(attributes.merge("bus_event_type" => "something2", "value"=>"12"))
+      QueueBus::Driver.perform(attributes.merge("bus_event_type" => "something2", "value"=>"12"))
 
-      hash = JSON.parse(ResqueBus.redis { |redis| redis.lpop("queue:test2_default") })
+      hash = JSON.parse(QueueBus.redis { |redis| redis.lpop("queue:test2_default") })
       hash["class"].should == "SubscriberTest2"
       hash["args"].should == [ {"bus_rider_app_key"=>"test2", "bus_rider_sub_key"=>"SubscriberTest2.test2", "bus_rider_queue" => "test2_default", "bus_rider_class_name"=>"SubscriberTest2",
                                "bus_event_type" => "something2", "value"=>"12", "x"=>"y"}.merge(bus_attrs) ]
 
-      ResqueBus::Runner1.value.should == 1
-      ResqueBus::Runner2.value.should == 0
-      ResqueBus::Util.constantize(hash["class"]).perform(*hash["args"])
-      ResqueBus::Runner1.value.should == 2
-      ResqueBus::Runner2.value.should == 0
+      QueueBus::Runner1.value.should == 1
+      QueueBus::Runner2.value.should == 0
+      QueueBus::Util.constantize(hash["class"]).perform(*hash["args"])
+      QueueBus::Runner1.value.should == 2
+      QueueBus::Runner2.value.should == 0
 
-      ResqueBus::Runner1.attributes.should == {"transformed" => 2}
+      QueueBus::Runner1.attributes.should == {"transformed" => 2}
     end
 
 
     it "should put in a different queue" do
-      dispatcher = ResqueBus.dispatcher_by_key("sub_module")
+      dispatcher = QueueBus.dispatcher_by_key("sub_module")
       all = dispatcher.subscriptions.all
       all.size.should == 4
 
@@ -148,33 +148,33 @@ require 'spec_helper'
       sub.key.should == "SubModule::SubscriberTest4.test4"
       sub.matcher.filters.should == {"bus_event_type"=>"test4"}
 
-      ResqueBus::Driver.perform(attributes.merge("bus_event_type" => "the_event"))
+      QueueBus::Driver.perform(attributes.merge("bus_event_type" => "the_event"))
 
-      hash = JSON.parse(ResqueBus.redis { |redis| redis.lpop("queue:sub_queue1") })
+      hash = JSON.parse(QueueBus.redis { |redis| redis.lpop("queue:sub_queue1") })
       hash["class"].should == "SubModule::SubscriberTest3"
       hash["args"].should == [ {"bus_rider_app_key"=>"sub_module", "bus_rider_sub_key"=>"SubModule::SubscriberTest3.test3", "bus_rider_queue" => "sub_queue1", "bus_rider_class_name"=>"SubModule::SubscriberTest3",
                                 "bus_event_type" => "the_event", "x" => "y"}.merge(bus_attrs) ]
 
-      ResqueBus::Runner1.value.should == 0
-      ResqueBus::Runner2.value.should == 0
-      ResqueBus::Util.constantize(hash["class"]).perform(*hash["args"])
-      ResqueBus::Runner1.value.should == 1
-      ResqueBus::Runner2.value.should == 0
+      QueueBus::Runner1.value.should == 0
+      QueueBus::Runner2.value.should == 0
+      QueueBus::Util.constantize(hash["class"]).perform(*hash["args"])
+      QueueBus::Runner1.value.should == 1
+      QueueBus::Runner2.value.should == 0
 
-      hash = JSON.parse(ResqueBus.redis { |redis| redis.lpop("queue:sub_queue2") })
+      hash = JSON.parse(QueueBus.redis { |redis| redis.lpop("queue:sub_queue2") })
       hash["class"].should == "SubModule::SubscriberTest3"
       hash["args"].should == [ {"bus_rider_app_key"=>"sub_module", "bus_rider_sub_key"=>"SubModule::SubscriberTest3.the_event", "bus_rider_queue" => "sub_queue2", "bus_rider_class_name"=>"SubModule::SubscriberTest3",
                                 "bus_event_type" => "the_event", "x" => "y"}.merge(bus_attrs) ]
 
-      ResqueBus::Runner1.value.should == 1
-      ResqueBus::Runner2.value.should == 0
-      ResqueBus::Util.constantize(hash["class"]).perform(*hash["args"])
-      ResqueBus::Runner1.value.should == 1
-      ResqueBus::Runner2.value.should == 1
+      QueueBus::Runner1.value.should == 1
+      QueueBus::Runner2.value.should == 0
+      QueueBus::Util.constantize(hash["class"]).perform(*hash["args"])
+      QueueBus::Runner1.value.should == 1
+      QueueBus::Runner2.value.should == 1
     end
 
     it "should subscribe to default and attributes" do
-      dispatcher = ResqueBus.dispatcher_by_key("my_thing")
+      dispatcher = QueueBus.dispatcher_by_key("my_thing")
       all = dispatcher.subscriptions.all
 
       sub = all.select{ |s| s.key == "SubscriberTest1.event_sub"}.first
@@ -189,49 +189,49 @@ require 'spec_helper'
       sub.key.should == "SubscriberTest1.thing_filter"
       sub.matcher.filters.should == {"x"=>"y"}
 
-      ResqueBus::Driver.perform(attributes.merge("bus_event_type" => "event_sub"))
-      ResqueBus.redis { |redis| redis.smembers("queues") }.should =~ ["myqueue"]
+      QueueBus::Driver.perform(attributes.merge("bus_event_type" => "event_sub"))
+      QueueBus.redis { |redis| redis.smembers("queues") }.should =~ ["myqueue"]
 
-      hash = JSON.parse(ResqueBus.redis { |redis| redis.lpop("queue:myqueue") })
+      hash = JSON.parse(QueueBus.redis { |redis| redis.lpop("queue:myqueue") })
       hash["class"].should == "SubscriberTest1"
       hash["args"].first.should eq({"bus_rider_app_key"=>"my_thing", "bus_rider_sub_key"=>"SubscriberTest1.thing_filter", "bus_rider_queue" => "myqueue", "bus_rider_class_name"=>"SubscriberTest1",
                                 "bus_event_type" => "event_sub", "x" => "y"}.merge(bus_attrs))
 
-      ResqueBus::Runner1.value.should == 0
-      ResqueBus::Runner2.value.should == 0
-      ResqueBus::Util.constantize(hash["class"]).perform(*hash["args"])
-      ResqueBus::Runner1.value.should == 0
-      ResqueBus::Runner2.value.should == 1
+      QueueBus::Runner1.value.should == 0
+      QueueBus::Runner2.value.should == 0
+      QueueBus::Util.constantize(hash["class"]).perform(*hash["args"])
+      QueueBus::Runner1.value.should == 0
+      QueueBus::Runner2.value.should == 1
 
-      hash = JSON.parse(ResqueBus.redis { |redis| redis.lpop("queue:myqueue") })
+      hash = JSON.parse(QueueBus.redis { |redis| redis.lpop("queue:myqueue") })
       hash["class"].should == "SubscriberTest1"
       hash["args"].should == [ {"bus_rider_app_key"=>"my_thing", "bus_rider_sub_key"=>"SubscriberTest1.event_sub", "bus_rider_queue" => "myqueue", "bus_rider_class_name"=>"SubscriberTest1",
                                 "bus_event_type" => "event_sub", "x" => "y"}.merge(bus_attrs) ]
 
-      ResqueBus::Runner1.value.should == 0
-      ResqueBus::Runner2.value.should == 1
-      ResqueBus::Util.constantize(hash["class"]).perform(*hash["args"])
-      ResqueBus::Runner1.value.should == 1
-      ResqueBus::Runner2.value.should == 1
+      QueueBus::Runner1.value.should == 0
+      QueueBus::Runner2.value.should == 1
+      QueueBus::Util.constantize(hash["class"]).perform(*hash["args"])
+      QueueBus::Runner1.value.should == 1
+      QueueBus::Runner2.value.should == 1
 
-      ResqueBus::Driver.perform(attributes.merge("bus_event_type" => "event_sub_other"))
-      ResqueBus.redis { |redis| redis.smembers("queues") }.should =~ ["myqueue"]
+      QueueBus::Driver.perform(attributes.merge("bus_event_type" => "event_sub_other"))
+      QueueBus.redis { |redis| redis.smembers("queues") }.should =~ ["myqueue"]
 
-      hash = JSON.parse(ResqueBus.redis { |redis| redis.lpop("queue:myqueue") })
+      hash = JSON.parse(QueueBus.redis { |redis| redis.lpop("queue:myqueue") })
       hash["class"].should == "SubscriberTest1"
       hash["args"].should == [ {"bus_rider_app_key"=>"my_thing", "bus_rider_sub_key"=>"SubscriberTest1.thing_filter", "bus_rider_queue" => "myqueue", "bus_rider_class_name"=>"SubscriberTest1",
                                 "bus_event_type" => "event_sub_other", "x" => "y"}.merge(bus_attrs) ]
 
-      ResqueBus::Runner1.value.should == 1
-      ResqueBus::Runner2.value.should == 1
-      ResqueBus::Util.constantize(hash["class"]).perform(*hash["args"])
-      ResqueBus::Runner1.value.should == 1
-      ResqueBus::Runner2.value.should == 2
+      QueueBus::Runner1.value.should == 1
+      QueueBus::Runner2.value.should == 1
+      QueueBus::Util.constantize(hash["class"]).perform(*hash["args"])
+      QueueBus::Runner1.value.should == 1
+      QueueBus::Runner2.value.should == 2
 
-      ResqueBus::Driver.perform({"x"=>"z"}.merge("bus_event_type" => "event_sub_other"))
-      ResqueBus.redis { |redis| redis.smembers("queues") }.should =~ ["myqueue"]
+      QueueBus::Driver.perform({"x"=>"z"}.merge("bus_event_type" => "event_sub_other"))
+      QueueBus.redis { |redis| redis.smembers("queues") }.should =~ ["myqueue"]
 
-      ResqueBus.redis { |redis| redis.lpop("queue:myqueue") }.should be_nil
+      QueueBus.redis { |redis| redis.lpop("queue:myqueue") }.should be_nil
     end
 
     describe ".perform" do

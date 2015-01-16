@@ -4,7 +4,7 @@ require "resque_bus/version"
 
 Gem::Specification.new do |s|
   s.name        = "resque-bus"
-  s.version     = Resque::Bus::VERSION
+  s.version     = ResqueBus::VERSION
   s.authors     = ["Brian Leonard"]
   s.email       = ["brian@bleonard.com"]
   s.homepage    = ""
@@ -18,14 +18,10 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib"]
 
-  # specify any dependencies here; for example:
-  s.add_dependency("multi_json")
-  s.add_dependency("redis")
-
-  # if using resque
-  s.add_development_dependency('resque', ['>= 1.10.0', '< 2.0'])
-  s.add_development_dependency('resque-scheduler', '>= 2.0.1')
-  s.add_development_dependency('resque-retry')
+  s.add_dependency('queue-bus')
+  s.add_dependency('resque', ['>= 1.10.0', '< 2.0'])
+  s.add_dependency('resque-scheduler', '>= 2.0.1')
+  s.add_dependency('resque-retry')
 
   s.add_development_dependency("rspec")
   s.add_development_dependency("timecop")
