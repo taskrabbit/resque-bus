@@ -5,7 +5,7 @@ module ResqueBus
       def register(queue, key, class_name, matcher, block)
         Subscription.new(queue, key, class_name, matcher, block)
       end
-      
+
       def from_redis(hash)
         queue_name = hash["queue_name"].to_s
         key        = hash["key"].to_s
@@ -22,7 +22,7 @@ module ResqueBus
 
     attr_reader :matcher, :executor, :queue_name, :key, :class_name
     attr_accessor :app_key  # dyanmically set on return from subscription_matches
-    
+
     def initialize(queue_name, key, class_name, filters, executor=nil)
       @queue_name = self.class.normalize(queue_name)
       @key        = key.to_s
@@ -30,14 +30,14 @@ module ResqueBus
       @matcher    = Matcher.new(filters)
       @executor   = executor
     end
-    
+
     def execute!(attributes)
       attributes = attributes.with_indifferent_access if attributes.respond_to?(:with_indifferent_access)
-      ResqueBus.with_global_attributes(attributes) do
+      ::ResqueBus.with_global_attributes(attributes) do
         executor.call(attributes)
       end
     end
-    
+
     def matches?(attributes)
       @matcher.matches?(attributes)
     end

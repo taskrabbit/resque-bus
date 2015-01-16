@@ -1,16 +1,22 @@
 module ResqueBus
   module Subscriber
-    
+
     def self.included(base)
       base.extend ClassMethods
+      ::ResqueBus.adapter.subscriber_includes(base)
     end
-    
+
+    def perform(*args)
+      # instance method level support for sidekiq
+      self.class.perform(*args)
+    end
+
     module ClassMethods
 
       def application(app_key)
         @app_key = ::ResqueBus::Application.normalize(app_key)
       end
-      
+
       def app_key
         return @app_key if @app_key
         @app_key = ::ResqueBus.default_app_key
@@ -19,14 +25,15 @@ module ResqueBus
         val = self.name.to_s.split("::").first
         @app_key = ::ResqueBus::Util.underscore(val)
       end
-      
+
       def subscribe(method_name, matcher_hash = nil)
-        queue_name   = ::Resque.queue_from_class(self)
+        queue_name   = nil
+        queue_name ||= self.instance_variable_get(:@queue) || (self.respond_to?(:queue) && self.queue)
         queue_name ||= ::ResqueBus.default_queue
         queue_name ||= "#{app_key}_default"
         subscribe_queue(queue_name, method_name, matcher_hash)
       end
-      
+
       def subscribe_queue(queue_name, method_name, matcher_hash = nil)
         klass = self
         matcher_hash ||= {"bus_event_type" => method_name}
@@ -34,19 +41,19 @@ module ResqueBus
         dispatcher = ::ResqueBus.dispatcher_by_key(app_key)
         dispatcher.add_subscription(queue_name, sub_key, klass.name.to_s, matcher_hash, lambda{ |att| klass.perform(att) })
       end
-      
+
       def transform(method_name)
         @transform = method_name
       end
-      
+
       def perform(attributes)
-        ResqueBus.with_global_attributes(attributes) do
+        ::ResqueBus.with_global_attributes(attributes) do
           sub_key = attributes["bus_rider_sub_key"]
           meth_key = sub_key.split(".").last
           resque_bus_execute(meth_key, attributes)
         end
       end
-      
+
       def resque_bus_execute(key, attributes)
         args = attributes
         args = send(@transform, attributes) if @transform

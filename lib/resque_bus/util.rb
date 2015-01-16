@@ -1,6 +1,35 @@
+require 'multi_json'
+
 module ResqueBus
   module Util
     extend self
+
+    class DecodeException < StandardError; end
+
+    # Given a Ruby object, returns a string suitable for storage in a
+    # queue.
+    def encode(object)
+      if MultiJson.respond_to?(:dump) && MultiJson.respond_to?(:load)
+        MultiJson.dump object
+      else
+        MultiJson.encode object
+      end
+    end
+
+    # Given a string, returns a Ruby object.
+    def decode(object)
+      return unless object
+
+      begin
+        if MultiJson.respond_to?(:dump) && MultiJson.respond_to?(:load)
+          MultiJson.load object
+        else
+          MultiJson.decode object
+        end
+      rescue ::MultiJson::DecodeError => e
+        raise DecodeException, e.message, e.backtrace
+      end
+    end
     
     def underscore(camel_cased_word)
       word = camel_cased_word.to_s.dup
@@ -11,6 +40,22 @@ module ResqueBus
       word.tr!("-", "_")
       word.downcase!
       word
+    end
+
+    def classify(table_name)
+      # strip out any leading schema name
+      # camelize(singularize(table_name.to_s.sub(/.*\./, '')))
+      camelize(table_name.to_s.sub(/.*\./, ''))
+    end
+
+    def camelize(term)
+      string = term.to_s
+      # string = string.sub(/^[a-z\d]*/) { inflections.acronyms[$&] || $&.capitalize }
+      string = string.sub(/^[a-z\d]*/) { $&.capitalize }
+      # string.gsub!(/(?:_|(\/))([a-z\d]*)/i) { "#{$1}#{inflections.acronyms[$2] || $2.capitalize}" }
+      string.gsub!(/(?:_|(\/))([a-z\d]*)/i) { "#{$1}#{$2.capitalize}" }
+      string.gsub!(/\//, '::')
+      string
     end
     
     def constantize(camel_cased_word)

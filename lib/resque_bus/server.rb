@@ -2,7 +2,7 @@ require 'resque-bus'
 require 'resque/server'
 require 'erb'
 
-# Extend Resque::Server to add tabs.
+# Extend ::Resque::Server to add tabs.
 module ResqueBus
   module Server
 
@@ -24,7 +24,7 @@ module ResqueBus
   end
 end
 
-Resque::Server.tabs << 'Bus'
-Resque::Server.class_eval do
-  include ResqueBus::Server
+::Resque::Server.tabs << 'Bus'
+::Resque::Server.class_eval do
+  include ::ResqueBus::Server
 end
