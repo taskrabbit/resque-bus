@@ -32,9 +32,9 @@ module ResqueBus
 end
 
 def perform_next_job(worker, &block)
-  return unless job = @worker.reserve
-  @worker.perform(job, &block)
-  @worker.done_working
+  return unless job = worker.reserve
+  worker.perform(job, &block)
+  worker.done_working
 end
 
 def test_sub(event_name, queue="default")
@@ -49,9 +49,6 @@ def test_list(*args)
   end
   out
 end
-
-
-Resque::Scheduler.mute = true
 
 RSpec.configure do |config|
   config.mock_framework = :rspec

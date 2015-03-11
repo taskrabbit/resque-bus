@@ -3,6 +3,10 @@ require "resque_bus/version"
 require 'redis/namespace'
 require 'resque'
 
+module QueueBus
+  autoload :Worker,          'resque_bus/compatibility'
+end
+
 module ResqueBus
   
   autoload :Application,      'resque_bus/application'
