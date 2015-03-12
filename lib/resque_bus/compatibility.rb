@@ -13,6 +13,8 @@ module QueueBus
         ResqueBus::Rider.perform(attributes)
       when "::QueueBus::Publisher", "QueueBus::Publisher"
         ResqueBus::Publisher.perform(attributes["bus_event_type"], attributes)
+      when "::QueueBus::Heartbeat", "QueueBus::Heartbeat"
+        ResqueBus::Heartbeat.perform
       else
         klass = ::ResqueBus::Util.constantize(class_name)
         klass.perform(attributes)
