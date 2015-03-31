@@ -2,7 +2,7 @@
 
 This project has moved to part of the larger [queue-bus](https://github.com/queue-bus/queue-bus) system.
 
-It is now [here](https://github.com/queue-bus/resque-bus) system.
+It is now [here](https://github.com/queue-bus/resque-bus).
 
 ### Upgrading
 
